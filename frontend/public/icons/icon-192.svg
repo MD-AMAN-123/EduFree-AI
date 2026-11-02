@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#grad)" />
+  <!-- Open Book Base -->
+  <path d="M36 136 C60 126 86 128 96 142 C106 128 132 126 156 136 L156 68 C132 58 106 60 96 74 C86 60 60 58 36 68 Z" fill="#ffffff" opacity="0.95" />
+  <path d="M96 74 L96 142" stroke="#047857" stroke-width="3" stroke-linecap="round" />
+  <!-- Telugu Letter 'అ' stylized center -->
+  <text x="96" y="112" font-family="'Noto Sans Telugu', 'Gautami', 'Nirmala UI', sans-serif" font-size="44" font-weight="bold" fill="#047857" text-anchor="middle">అ</text>
+  <!-- Sparkle of Learning -->
+  <polygon points="96,28 100,42 114,46 100,50 96,64 92,50 78,46 92,42" fill="url(#gold)" />
+</svg>

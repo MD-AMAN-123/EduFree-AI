@@ -1,0 +1,20 @@
+{
+  "name": "edufree-ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server:pg": "node server/postgresServer.js"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "firebase": "^13.1.0",
+    "pg": "^8.23.1"
+  }
+}
