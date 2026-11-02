@@ -225,7 +225,7 @@ flowchart LR
 EduFree.AI/
 ├── backend/                              # Backend PostgreSQL Bridge Server
 │   ├── postgresServer.js                 # Node.js HTTP/REST/WebSocket server for PostgreSQL sync
-│   └── schema.sql                        # Production PostgreSQL DDL schema & triggers
+│   └── schema.sql                        # Production Supabase(SQL) DDL schema & triggers
 ├── frontend/                             # Frontend Progressive Web App
 │   ├── index.html                        # App HTML shell with viewport, fonts, and meta tags
 │   ├── public/                           # Static assets served at root
