@@ -4,8 +4,8 @@
 
 const GEMINI_API_KEY_STORAGE = 'edufree_gemini_api_key';
 const GEMINI_SIMULATE_OFFLINE_STORAGE = 'edufree_gemini_simulate_offline';
-const PRIMARY_MODEL = 'gemini-3.5-flash-lite';
-const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+const PRIMARY_MODEL = 'gemini-3.8-flash-lite';
+const FALLBACK_MODEL = 'gemini-3.8-flash-lite';
 
 function _cleanKey(key) {
   if (!key) return '';
@@ -44,6 +44,44 @@ export function setGeminiApiKey(key) {
       localStorage.removeItem(GEMINI_API_KEY_STORAGE);
     }
   } catch (e) { /* ignore */ }
+}
+
+/**
+ * Live test a Gemini API key
+ * @param {string} [customKey] Optional key to test, otherwise uses configured key
+ * @returns {Promise<{ valid: boolean, error?: string, model?: string }>}
+ */
+export async function testGeminiApiKey(customKey) {
+  const apiKey = customKey ? _cleanKey(customKey) : getGeminiApiKey();
+  if (!apiKey) {
+    return { valid: false, error: 'No API key provided' };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }]
+      })
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const msg = errData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+      return { valid: false, error: msg };
+    }
+
+    return { valid: true, model: 'gemini-3.5-flash-lite' };
+  } catch (err) {
+    return { valid: false, error: err.message || 'Network error reaching Gemini' };
+  }
 }
 
 /**
@@ -166,7 +204,7 @@ export async function callGeminiTeacherChat({
   for (const model of modelsToTry) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 14000); // 14-second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 

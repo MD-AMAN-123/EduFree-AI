@@ -10,6 +10,7 @@ import {
   callGeminiTeacherChat,
   getGeminiApiKey,
   setGeminiApiKey,
+  testGeminiApiKey,
   isSimulatedOffline,
   setSimulatedOffline
 } from '../services/geminiService.js';
@@ -174,8 +175,8 @@ function _renderChatbotDOM() {
           <div class="settings-modal-body">
             <p class="settings-desc">
               ${isTe
-                ? 'ఆన్‌లైన్‌లో ఉన్నప్పుడు Google Gemini తో వేగవంతమైన సమాధానాలు పొందండి. ఇంటర్నెట్ లేనప్పుడు లేదా ఆఫ్‌లైన్ లో Gemma 4 AI స్వయంచాలకంగా నడుస్తుంది.'
-                : 'When online, Google Gemini powers advanced reasoning. When offline, Gemma 4 AI runs entirely on your device.'}
+      ? 'ఆన్‌లైన్‌లో ఉన్నప్పుడు Google Gemini తో వేగవంతమైన సమాధానాలు పొందండి. ఇంటర్నెట్ లేనప్పుడు లేదా ఆఫ్‌లైన్ లో Gemma 4 AI స్వయంచాలకంగా నడుస్తుంది.'
+      : 'When online, Google Gemini powers advanced reasoning. When offline, Gemma 4 AI runs entirely on your device.'}
             </p>
 
             <div class="form-group-custom">
@@ -192,8 +193,8 @@ function _renderChatbotDOM() {
               />
               <span class="form-hint-custom">
                 ${isTe
-                  ? 'మీ వ్యక్తిగత ఉచిత కీని నమోదు చేయండి (Google AI Studio నుండి ఉచితంగా పొందవచ్చు).'
-                  : 'Enter your Gemini API key (Free tier supported via Google AI Studio).'}
+      ? 'మీ వ్యక్తిగత ఉచిత కీని నమోదు చేయండి (Google AI Studio నుండి ఉచితంగా పొందవచ్చు).'
+      : 'Enter your Gemini API key (Free tier supported via Google AI Studio).'}
               </span>
             </div>
 
@@ -207,8 +208,13 @@ function _renderChatbotDOM() {
               <input type="checkbox" id="simulate-offline-checkbox" ${isSimulatedOffline() ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;" />
             </div>
 
-            <div style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end;">
-              <button id="save-gemini-key-btn" class="btn btn-primary btn-sm">
+            <div id="gemini-key-test-feedback" style="display: none; margin-top: 10px; font-size: 0.8rem; padding: 8px 12px; border-radius: 8px;"></div>
+
+            <div style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+              <button id="test-gemini-key-btn" type="button" class="btn btn-outline btn-sm">
+                ⚡ ${isTe ? 'కీ పరీక్షించండి' : 'Test Key'}
+              </button>
+              <button id="save-gemini-key-btn" type="button" class="btn btn-primary btn-sm">
                 💾 ${isTe ? 'సెట్టింగ్స్ సేవ్ చేయండి' : 'Save Settings'}
               </button>
             </div>
@@ -399,6 +405,41 @@ function _attachEventListeners() {
     settingsOverlay.classList.remove('settings-open');
   };
 
+  // Test Gemini Key
+  const testKeyBtn = _chatContainer.querySelector('#test-gemini-key-btn');
+  const testFeedback = _chatContainer.querySelector('#gemini-key-test-feedback');
+  if (testKeyBtn) {
+    testKeyBtn.onclick = async () => {
+      const keyVal = _chatContainer.querySelector('#gemini-key-input')?.value.trim();
+      const isTe = getLanguage() === 'te';
+      testKeyBtn.textContent = isTe ? 'తనిఖీ చేస్తోంది...' : 'Testing...';
+      testKeyBtn.disabled = true;
+
+      const res = await testGeminiApiKey(keyVal);
+      testKeyBtn.textContent = isTe ? '⚡ కీ పరీక్షించండి' : '⚡ Test Key';
+      testKeyBtn.disabled = false;
+
+      if (testFeedback) {
+        testFeedback.style.display = 'block';
+        if (res.valid) {
+          testFeedback.style.background = '#ecfdf5';
+          testFeedback.style.color = '#065f46';
+          testFeedback.style.border = '1px solid #10b981';
+          testFeedback.textContent = isTe
+            ? `✓ Gemini API విజయవంతంగా కనెక్ట్ అయింది! (${res.model})`
+            : `✓ Connected to Gemini API successfully! (${res.model})`;
+        } else {
+          testFeedback.style.background = '#fef2f2';
+          testFeedback.style.color = '#991b1b';
+          testFeedback.style.border = '1px solid #ef4444';
+          testFeedback.textContent = isTe
+            ? `✗ కనెక్షన్ విఫలమైంది: ${res.error}`
+            : `✗ Connection failed: ${res.error}`;
+        }
+      }
+    };
+  }
+
   // Save Settings
   _chatContainer.querySelector('#save-gemini-key-btn').onclick = () => {
     const keyVal = _chatContainer.querySelector('#gemini-key-input').value.trim();
@@ -511,11 +552,22 @@ async function _handleUserQuery(userText) {
 
     // 4. If offline, or no Gemini key, or Gemini failed -> Fallback to Gemma 4 Offline Engine
     if (!result || !result.success) {
+      const fallbackReason = result?.reason || '';
       _setTyping(true, '🤖 Gemma 4 Offline AI ఇంజిన్ లెక్కిస్తోంది...');
       const offlineRes = await gemma4TeacherChat(userText, contextData);
+
+      let replyText = offlineRes.text;
+      if (fallbackReason && isGeminiActive()) {
+        const isTe = lang === 'te';
+        const notice = isTe
+          ? `> ⚠️ **Gemini ఆన్‌లైన్ గమనిక:** ${fallbackReason} — పరికరంలో ఉన్న Gemma 4 Offline AI ద్వారా సమాధానం రూపొందించబడింది.\n\n`
+          : `> ⚠️ **Gemini Online Notice:** ${fallbackReason} — Answered using local Gemma 4 Offline AI.\n\n`;
+        replyText = notice + replyText;
+      }
+
       result = {
         success: true,
-        text: offlineRes.text,
+        text: replyText,
         modelName: offlineRes.modelName,
         source: offlineRes.source
       };
