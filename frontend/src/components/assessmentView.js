@@ -7,6 +7,7 @@ import { generateRecommendations } from '../data/recommendations.js';
 import { queueMutation } from '../storage/syncQueue.js';
 import { playTone } from '../utils/speechAudio.js';
 import { generateId } from '../utils/helpers.js';
+import { icon } from '../utils/icons.js';
 
 let draftAutoSaveTimer = null;
 
@@ -104,7 +105,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
       <div class="card" style="max-width: 680px; margin: 0 auto;">
         <div class="card-header">
           <h2 class="card-title">
-            <span>📖</span> ${t('assess_title')}
+            <span>${icon('assess', { size: 20 })}</span> ${t('assess_title')}
           </h2>
           <span style="font-size: 0.82rem; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700;">
             ${t('step_prefix')} 1/4: ${t('step_1_title')}
@@ -145,8 +146,8 @@ export async function renderAssessment(container, { initialStudentId = null, onF
 
         <!-- Instructions Box -->
         <div style="background: var(--primary-50); border-left: 4px solid var(--primary-600); padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 24px;">
-          <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--primary-900); margin-bottom: 4px; font-family: var(--font-telugu);">
-            💡 ${t('teacher_guidance')}
+          <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--primary-900); margin-bottom: 4px; font-family: var(--font-telugu); display: flex; align-items: center; gap: 6px;">
+            ${icon('bulb', { size: 16, color: '#b45309' })} ${t('teacher_guidance')}
           </h4>
           <p style="font-size: 0.85rem; color: var(--primary-800);">
             ${t('instructions_text')}
@@ -158,7 +159,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
             ${t('cancel')}
           </button>
           <button id="btn-start-reading-step" class="btn btn-primary btn-lg">
-            <span>🚀</span> ${t('start_reading_btn')}
+            <span>${icon('rocket', { size: 18 })}</span> ${t('start_reading_btn')}
           </button>
         </div>
       </div>
@@ -207,8 +208,8 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         <!-- Top Toolbar: Student Info & Timer -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-100); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-              👤
+            <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-100); display: flex; align-items: center; justify-content: center;">
+              ${icon('user', { size: 22, color: 'var(--primary-700)' })}
             </div>
             <div>
               <div style="font-weight: 800; font-size: 1.15rem; font-family: var(--font-telugu); color: var(--text-main);">
@@ -232,7 +233,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
                 ${isTimerRunning ? `⏸️ ${t('timer_pause')}` : `▶️ ${t('timer_start')}`}
               </button>
               <button id="btn-timer-reset" class="btn btn-outline btn-sm" style="color: #ffffff; border-color: rgba(255,255,255,0.4);" aria-label="Reset timer">
-                🔄 ${t('timer_reset')}
+                ${icon('refresh', { size: 13, color: '#ffffff' })} ${t('timer_reset')}
               </button>
             </div>
           </div>
@@ -304,7 +305,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header" style="margin-bottom: 8px; padding-bottom: 6px;">
             <h3 class="card-title" style="font-size: 1rem;">
-              <span>🔍</span> ${t('obs_title')}
+              <span>${icon('search', { size: 16 })}</span> ${t('obs_title')}
             </h3>
           </div>
 
@@ -351,7 +352,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
             ← ${t('back_btn')}
           </button>
           <button id="btn-go-to-comp" class="btn btn-primary btn-lg">
-            <span>➡️</span> ${t('next_comp_btn')}
+            <span>${icon('arrowRight', { size: 18 })}</span> ${t('next_comp_btn')}
           </button>
         </div>
       </div>
@@ -491,7 +492,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
       <div class="card" style="max-width: 720px; margin: 0 auto;">
         <div class="card-header">
           <h2 class="card-title">
-            <span>❓</span> ${t('comp_title')}
+            <span>${icon('help', { size: 20 })}</span> ${t('comp_title')}
           </h2>
           <span style="font-size: 0.82rem; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700;">
             ${t('step_prefix')} 3/4: ${t('step_3_title')}
@@ -519,21 +520,21 @@ export async function renderAssessment(container, { initialStudentId = null, onF
                   data-idx="${idx}" 
                   data-val="correct"
                 >
-                  <span>✅</span> ${t('comp_correct')}
+                  <span>${icon('checkCircle', { size: 14 })}</span> ${t('comp_correct')}
                 </button>
                 <button 
                   class="btn btn-sm comp-opt-btn ${comprehensionResponses[idx] === 'partial' ? 'btn-accent' : 'btn-outline'}" 
                   data-idx="${idx}" 
                   data-val="partial"
                 >
-                  <span>⚠️</span> ${t('comp_partial')}
+                  <span>${icon('alert', { size: 14 })}</span> ${t('comp_partial')}
                 </button>
                 <button 
                   class="btn btn-sm comp-opt-btn ${comprehensionResponses[idx] === 'incorrect' ? 'btn-danger' : 'btn-outline'}" 
                   data-idx="${idx}" 
                   data-val="incorrect"
                 >
-                  <span>❌</span> ${t('comp_incorrect')}
+                  <span>${icon('crossCircle', { size: 14 })}</span> ${t('comp_incorrect')}
                 </button>
               </div>
             </div>
@@ -545,7 +546,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
             ← ${t('back_to_reading_btn')}
           </button>
           <button id="btn-view-summary" class="btn btn-primary btn-lg">
-            <span>📊</span> ${t('view_results_btn')}
+            <span>${icon('chart', { size: 18 })}</span> ${t('view_results_btn')}
           </button>
         </div>
       </div>
@@ -640,14 +641,14 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         <div class="card-header">
           <div>
             <h2 class="card-title">
-              <span>🎉</span> ${t('result_title')}
+              <span>${icon('trophy', { size: 22, color: '#f59e0b' })}</span> ${t('result_title')}
             </h2>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
               ${t('student_name')}: <strong>${student?.name}</strong> (${student?.localCode}) • "${lang === 'te' ? currentPassage.title_te : currentPassage.title_en}"
             </p>
           </div>
-          <span style="font-size: 0.78rem; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700;">
-            💾 ${t('saved_locally_badge')}
+          <span style="font-size: 0.78rem; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+            ${icon('save', { size: 14 })} ${t('saved_locally_badge')}
           </span>
         </div>
 
@@ -707,8 +708,8 @@ export async function renderAssessment(container, { initialStudentId = null, onF
 
         <!-- Transparent Pedagogical Rationale Box -->
         <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
-          <h4 style="font-size: 0.95rem; font-weight: 700; color: #92400e; margin-bottom: 8px; font-family: var(--font-telugu);">
-            💡 ${t('rec_rationale_title')}
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: #92400e; margin-bottom: 8px; font-family: var(--font-telugu); display: flex; align-items: center; gap: 6px;">
+            ${icon('bulb', { size: 18, color: '#92400e' })} ${t('rec_rationale_title')}
           </h4>
           <ul style="padding-left: 20px; font-size: 0.88rem; color: #78350f; line-height: 1.8;">
             ${recResult.rationales.map((r) => `
@@ -719,8 +720,8 @@ export async function renderAssessment(container, { initialStudentId = null, onF
 
         <!-- Recommended Targeted Practice Activities List -->
         <div style="margin-bottom: 24px;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; font-family: var(--font-telugu);">
-            🎯 ${t('rec_activities_title')}:
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; font-family: var(--font-telugu); display: flex; align-items: center; gap: 6px;">
+            ${icon('target', { size: 18, color: 'var(--primary-700)' })} ${t('rec_activities_title')}:
           </h4>
           <div style="display: flex; flex-direction: column; gap: 10px;">
             ${recResult.recommendations.map((rec) => `
@@ -748,7 +749,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
           </button>
           
           <button id="btn-next-student-flow" class="btn btn-primary btn-lg">
-            <span>👤➡️</span> ${t('btn_next_student')}
+            <span>${icon('userPlus', { size: 18 })}</span> ${t('btn_next_student')}
           </button>
         </div>
       </div>

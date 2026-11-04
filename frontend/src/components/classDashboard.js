@@ -3,6 +3,7 @@ import { t, getLanguage } from '../data/i18n.js';
 import { getAllFromStore, putInStore, getSetting, setSetting } from '../storage/db.js';
 import { formatDate, getDaysAgo } from '../utils/helpers.js';
 import { TELUGU_LEVELS } from '../data/teluguContent.js';
+import { icon } from '../utils/icons.js';
 
 export async function renderDashboard(container, { onStartAssessment, onViewProfile, onStartPractice, onOpenAddStudent, onOpenAddClass, onViewSyllabus, onOpenActivities }) {
   const lang = getLanguage();
@@ -74,13 +75,13 @@ export async function renderDashboard(container, { onStartAssessment, onViewProf
 
       <div class="class-actions">
         <button id="add-student-btn" class="btn btn-primary btn-sm">
-          <span>➕</span> ${t('add_student')}
+          <span>${icon('userPlus', { size: 15 })}</span> ${t('add_student')}
         </button>
         <button id="add-class-btn" class="btn btn-outline btn-sm">
-          <span>🏫</span> ${t('add_class')}
+          <span>${icon('school', { size: 15 })}</span> ${t('add_class')}
         </button>
         <button id="view-scert-btn" class="btn btn-outline btn-sm" title="${t('nav_syllabus')}">
-          <span>📚</span> ${t('nav_syllabus')}
+          <span>${icon('syllabus', { size: 15 })}</span> ${t('nav_syllabus')}
         </button>
       </div>
     </div>
@@ -112,7 +113,7 @@ export async function renderDashboard(container, { onStartAssessment, onViewProf
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">
-          <span>📈</span> ${t('dash_skill_overview')}
+          <span>${icon('trending', { size: 20 })}</span> ${t('dash_skill_overview')}
         </h2>
         <span style="font-size: 0.8rem; color: var(--text-muted);">${totalStudents} ${t('students_count')}</span>
       </div>
@@ -137,22 +138,22 @@ export async function renderDashboard(container, { onStartAssessment, onViewProf
     <!-- Quick Assessment Banner Call-to-Action -->
     <div style="background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-700) 100%); color: #ffffff; border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow-md);">
       <div>
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; font-family: var(--font-telugu);">
-          📖 ${t('quick_assess_title')}
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; font-family: var(--font-telugu); display: flex; align-items: center; gap: 8px;">
+          ${icon('assess', { size: 20, color: '#fde68a' })} ${t('quick_assess_title')}
         </h3>
         <p style="font-size: 0.85rem; opacity: 0.9;">
           ${t('quick_assess_desc')}
         </p>
       </div>
       <button id="quick-start-assess-btn" class="btn btn-accent btn-lg">
-        <span>🚀</span> ${t('dash_start_assessment')}
+        <span>${icon('rocket', { size: 18 })}</span> ${t('dash_start_assessment')}
       </button>
     </div>
 
     <!-- Exciting Oral & Visual Activities Center CTA Banner -->
     <div style="background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%); color: #ffffff; border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 14px rgba(16,185,129,0.3); border: 1px solid rgba(255,255,255,0.2);">
       <div style="display: flex; align-items: center; gap: 14px;">
-        <span style="font-size: 2.4rem; line-height: 1;">🎮</span>
+        <span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 12px;">${icon('activities', { size: 28, color: '#ffffff' })}</span>
         <div>
           <h3 style="font-size: 1.18rem; font-weight: 800; margin-bottom: 4px; font-family: var(--font-telugu), var(--font-body); display: flex; align-items: center; gap: 8px;">
             ${lang === 'te' ? 'విద్యార్థుల కృత్యాల కేంద్రం (Activities Center)' : 'Telugu Oral & Visual Activities Center'}
@@ -166,7 +167,7 @@ export async function renderDashboard(container, { onStartAssessment, onViewProf
         </div>
       </div>
       <button id="dashboard-open-activities-btn" class="btn" style="background: #ffffff; color: #065f46; font-weight: 800; padding: 12px 22px; border-radius: var(--radius-full); border: none; font-size: 0.95rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 8px; transition: transform 0.15s;">
-        <span>🎯</span> ${lang === 'te' ? 'కృత్యాలు ఆడండి' : 'Play Activities'} →
+        <span>${icon('practice', { size: 18, color: '#065f46' })}</span> ${lang === 'te' ? 'కృత్యాలు ఆడండి' : 'Play Activities'} →
       </button>
     </div>
 
@@ -174,7 +175,7 @@ export async function renderDashboard(container, { onStartAssessment, onViewProf
     <div class="card">
       <div class="card-header roster-header">
         <h2 class="card-title">
-          <span>👥</span> ${t('dash_student_roster')}
+          <span>${icon('users', { size: 20 })}</span> ${t('dash_student_roster')}
         </h2>
         <div class="roster-search-wrap">
           <input type="text" id="roster-search-input" placeholder="${t('search_placeholder')}" class="roster-search-field" aria-label="${t('search_placeholder')}">
@@ -283,13 +284,13 @@ function renderStudentRow(std, assessments, lang = 'te') {
       <td class="roster-col-actions" data-label="${t('col_actions')}">
         <div class="roster-action-btns">
           <button class="btn btn-primary btn-sm btn-assess-std" data-student-id="${std.id}" title="${t('action_assess')}">
-            <span>📖</span> ${t('action_assess')}
+            <span>${icon('assess', { size: 14 })}</span> ${t('action_assess')}
           </button>
           <button class="btn btn-outline btn-sm btn-profile-std" data-student-id="${std.id}" title="${t('action_view_profile')}">
-            <span>📈</span> ${t('action_view_profile')}
+            <span>${icon('trending', { size: 14 })}</span> ${t('action_view_profile')}
           </button>
           <button class="btn btn-accent btn-sm btn-practice-std" data-student-id="${std.id}" data-level-id="${std.currentLevelId || 'level_1_letters'}" title="${t('action_practice')}">
-            <span>🎯</span> ${t('action_practice')}
+            <span>${icon('practice', { size: 14 })}</span> ${t('action_practice')}
           </button>
         </div>
       </td>

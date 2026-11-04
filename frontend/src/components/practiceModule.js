@@ -4,6 +4,7 @@ import { TELUGU_LEVELS, TELUGU_LETTERS, TELUGU_GUNINTHALU_FAMILIES, TELUGU_SIMPL
 import { speakTeluguText, stopSpeech, playTone } from '../utils/speechAudio.js';
 import { putInStore } from '../storage/db.js';
 import { generateId } from '../utils/helpers.js';
+import { icon } from '../utils/icons.js';
 
 export function renderPractice(container, { studentId = null, initialLevelId = 'level_1_letters', onBack, onOpenActivities }) {
   const lang = getLanguage();
@@ -23,12 +24,12 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
         <div class="card" style="margin-bottom: 16px; padding: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <h2 class="card-title" style="font-size: 1.25rem;">
-              <span>🎯</span> ${t('practice_title')}
+              <span>${icon('practice', { size: 20 })}</span> ${t('practice_title')}
             </h2>
             <div style="display: flex; gap: 8px; align-items: center;">
               ${onOpenActivities ? `
                 <button id="btn-practice-goto-activities" class="btn btn-accent btn-sm" style="font-weight: 700; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">
-                  <span>🎮</span> ${lang === 'te' ? 'సరదా కృత్యాలు' : 'Activities'}
+                  <span>${icon('activities', { size: 16 })}</span> ${lang === 'te' ? 'సరదా కృత్యాలు' : 'Activities'}
                 </button>
               ` : ''}
               <button id="btn-practice-back" class="btn btn-outline btn-sm">
@@ -111,8 +112,8 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
             <div class="flashcard-big-telugu">${item.letter}</div>
             <div class="flashcard-word">${item.word}</div>
             <div class="flashcard-meaning">${item.wordMeaning} • /${item.phonetic}/</div>
-            <div style="margin-top: 14px; font-size: 0.82rem; color: var(--primary-700); font-weight: 600;">
-              🔊 ${t('tap_listen_pronunciation')}
+            <div style="margin-top: 14px; font-size: 0.82rem; color: var(--primary-700); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              ${icon('volume', { size: 16 })} ${t('tap_listen_pronunciation')}
             </div>
           </div>
         </div>
@@ -122,7 +123,7 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
             ← ${t('prev_btn')}
           </button>
           <button id="btn-speak-letter" class="btn btn-accent btn-lg">
-            <span>🔊</span> ${t('audio_listen')}
+            <span>${icon('volume', { size: 18 })}</span> ${t('audio_listen')}
           </button>
           <button id="btn-next-letter" class="btn btn-primary" ${letterIndex === TELUGU_LETTERS.length - 1 ? 'disabled' : ''}>
             ${t('next_btn')} →
@@ -173,7 +174,7 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
             ${family.series[0].sign} (${family.series[0].sound})
           </div>
           <button id="btn-speak-gunintham" class="btn btn-accent btn-sm" style="margin-top: 8px;">
-            <span>🔊</span> ${t('listen_sound_btn')}
+            <span>${icon('volume', { size: 15 })}</span> ${t('listen_sound_btn')}
           </button>
         </div>
       </div>
@@ -206,7 +207,7 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
             ← ${t('prev_btn')}
           </button>
           <button id="btn-speak-simple" class="btn btn-accent btn-lg">
-            <span>🔊</span> ${t('audio_listen')}
+            <span>${icon('volume', { size: 18 })}</span> ${t('audio_listen')}
           </button>
           <button id="btn-next-simple" class="btn btn-primary" ${simpleWordIndex === TELUGU_SIMPLE_WORDS.length - 1 ? 'disabled' : ''}>
             ${t('next_btn')} →
@@ -242,7 +243,7 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
             ← ${t('prev_btn')}
           </button>
           <button id="btn-speak-ottulu" class="btn btn-accent btn-lg">
-            <span>🔊</span> ${t('audio_listen')}
+            <span>${icon('volume', { size: 18 })}</span> ${t('audio_listen')}
           </button>
           <button id="btn-next-ottulu" class="btn btn-primary" ${ottuluIndex === TELUGU_OTTULU_WORDS.length - 1 ? 'disabled' : ''}>
             ${t('next_btn')} →
@@ -259,8 +260,8 @@ export function renderPractice(container, { studentId = null, initialLevelId = '
       <div class="card" style="padding: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
           <div>
-            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--primary-900); font-family: var(--font-telugu);">
-              📖 ${lang === 'te' ? story.title_te : story.title_en} (Read-Along)
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--primary-900); font-family: var(--font-telugu); display: flex; align-items: center; gap: 8px;">
+              ${icon('assess', { size: 22, color: 'var(--primary-700)' })} ${lang === 'te' ? story.title_te : story.title_en} (Read-Along)
             </h3>
             <p style="font-size: 0.82rem; color: var(--text-muted);">
               ${t('read_along_hint')}

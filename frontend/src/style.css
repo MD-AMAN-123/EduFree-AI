@@ -5801,3 +5801,46 @@ body.sunlight-mode .chat-action-btn {
 .tile-developer .tile-title { color: #7c3aed; }
 .tile-developer .tile-status { color: #a78bfa; font-weight: 600; }
 .tile-developer .tile-arrow { color: #7c3aed; }
+
+/* =====================================================================
+   Professional App Vector Icons
+   ===================================================================== */
+.app-icon {
+  display: inline-block;
+  vertical-align: -2.5px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  transition: transform 0.2s ease, stroke 0.2s ease;
+}
+
+.nav-tab-btn .app-icon {
+  margin-right: 4px;
+}
+
+.ctrl-icon .app-icon {
+  vertical-align: middle;
+}
+
+.tile-icon .app-icon {
+  vertical-align: middle;
+}
+
+.drawer-nav-icon .app-icon {
+  vertical-align: middle;
+}
+
+.dock-icon .app-icon {
+  vertical-align: middle;
+}
+
+.btn .app-icon {
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+.card-title .app-icon {
+  margin-right: 6px;
+  vertical-align: -3px;
+  color: var(--primary-600);
+}
+

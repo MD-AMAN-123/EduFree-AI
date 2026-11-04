@@ -2,6 +2,7 @@
 // Reference: https://scert.telangana.gov.in
 import { t, getLanguage } from '../data/i18n.js';
 import { SCERT_CLASSES_DATA, SCERT_STAGES, SCERT_ACADEMIC_STANDARDS, getSyllabusByClass, searchSyllabus } from '../data/scertSyllabus.js';
+import { icon } from '../utils/icons.js';
 
 let selectedClassNum = '3';
 let selectedSubjectKey = 'all';
@@ -28,10 +29,10 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 12px;">
             <div>
               <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(5, 150, 105, 0.12); color: #047857; font-size: 0.78rem; font-weight: 700; margin-bottom: 8px;">
-                🏛️ ${t('scert_portal_badge')}
+                ${icon('school', { size: 14, color: '#047857' })} ${t('scert_portal_badge')}
               </div>
-              <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--primary-900); font-family: var(--font-telugu);">
-                📚 ${t('scert_portal_title')}
+              <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--primary-900); font-family: var(--font-telugu); display: flex; align-items: center; gap: 8px;">
+                ${icon('syllabus', { size: 24, color: 'var(--primary-700)' })} ${t('scert_portal_title')}
               </h2>
               <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">
                 ${t('scert_portal_subtitle')}
@@ -40,7 +41,7 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <a href="https://scert.telangana.gov.in" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" title="${t('scert_view_source')}">
-                🌐 SCERT Portal ↗
+                ${icon('globe', { size: 14 })} SCERT Portal ↗
               </a>
               <button id="syllabus-back-btn" class="btn btn-outline btn-sm">
                 ← ${isTe ? 'డాష్‌బోర్డ్' : 'Dashboard'}
@@ -58,7 +59,7 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
               value="${searchQuery}" 
               style="padding-left: 38px; width: 100%; border-radius: 12px; font-size: 0.92rem;"
             />
-            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; opacity: 0.6;">🔍</span>
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.6; display: flex; align-items: center;">${icon('search', { size: 16 })}</span>
             ${searchQuery ? `<button id="clear-search-btn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem;">✕</button>` : ''}
           </div>
         </div>
@@ -68,8 +69,8 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
         <!-- SCERT Academic Standards Drawer (విద్యా ప్రమాణాలు) -->
         <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border: 1.5px solid var(--border-light);">
           <details style="cursor: pointer;">
-            <summary style="font-size: 1.05rem; font-weight: 700; color: var(--primary-900); font-family: var(--font-telugu); outline: none; padding: 4px 0;">
-              🎯 ${t('scert_academic_standards_title')} (AS-1 to AS-6 CCE Framework)
+            <summary style="font-size: 1.05rem; font-weight: 700; color: var(--primary-900); font-family: var(--font-telugu); outline: none; padding: 4px 0; display: flex; align-items: center; gap: 6px;">
+              ${icon('target', { size: 18, color: 'var(--primary-700)' })} ${t('scert_academic_standards_title')} (AS-1 to AS-6 CCE Framework)
             </summary>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 16px;">
               ${SCERT_ACADEMIC_STANDARDS.map((as) => `
@@ -177,7 +178,7 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
             <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.2); color: #fbbf24; font-size: 0.74rem; font-weight: 700; margin-bottom: 6px;">
-              ⚡ ${schemeTag}
+              ${icon('lightning', { size: 14, color: '#fbbf24' })} ${schemeTag}
             </div>
             <h3 style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-telugu);">
               ${isTe ? classData.title_te : classData.title_en}
@@ -189,7 +190,7 @@ export function renderScertSyllabus(container, { onBack, onLaunchPractice }) {
 
           ${isPrimary ? `
             <button id="class-jump-practice-btn" class="btn btn-accent btn-sm" style="font-size: 0.82rem;">
-              🎯 ${t('scert_jump_practice')}
+              <span>${icon('practice', { size: 14 })}</span> ${t('scert_jump_practice')}
             </button>
           ` : ''}
         </div>

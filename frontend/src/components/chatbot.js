@@ -15,6 +15,7 @@ import {
   setSimulatedOffline
 } from '../services/geminiService.js';
 import { speakTeluguText, stopSpeech } from '../utils/speechAudio.js';
+import { icon } from '../utils/icons.js';
 
 const CHAT_STORAGE_KEY = 'edufree_teacher_chat_history_v2';
 const TEASER_SEEN_KEY = 'edufree_chat_teaser_seen';
@@ -64,7 +65,7 @@ function _renderChatbotDOM() {
   _chatContainer.innerHTML = `
     <!-- Floating Greeting Teaser (Shows when not seen yet) -->
     <div id="chatbot-teaser" class="chatbot-teaser ${teaserSeen ? 'chatbot-teaser-hidden' : ''}">
-      <span class="teaser-icon">✨</span>
+      <span class="teaser-icon">${icon('sparkles', { size: 18, color: '#f59e0b' })}</span>
       <div class="teaser-content">
         <strong class="teaser-title">${isTe ? 'బోధనా మిత్ర (Teacher AI)' : 'Teacher Mitra AI'}</strong>
         <span class="teaser-desc">${isTe ? 'విద్యార్థుల ప్రగతి & సహాయం కోసం ఇక్కడ నొక్కండి' : 'Tap to access student progress & app help'}</span>
@@ -154,10 +155,10 @@ function _renderChatbotDOM() {
 
         <div class="header-controls">
           <button id="chatbot-settings-toggle-btn" class="header-ctrl-btn" title="${isTe ? 'AI ఇంజిన్ & API కీ సెట్టింగ్స్' : 'AI Engine & Gemini API Key Settings'}" aria-label="Settings">
-            ⚙️
+            ${icon('settings', { size: 16 })}
           </button>
           <button id="chatbot-clear-history-btn" class="header-ctrl-btn" title="${isTe ? 'సంభాషణను క్లియర్ చేయండి' : 'Clear Chat History'}" aria-label="Clear chat">
-            🗑️
+            ${icon('trash', { size: 16 })}
           </button>
           <button id="chatbot-close-panel-btn" class="header-ctrl-btn header-close-btn" title="${isTe ? 'మూసివేయి' : 'Close'}" aria-label="Close chat">
             ✕
@@ -169,19 +170,19 @@ function _renderChatbotDOM() {
       <div id="chatbot-settings-overlay" class="chatbot-settings-overlay ${_isSettingsOpen ? 'settings-open' : ''}">
         <div class="settings-modal-card">
           <div class="settings-modal-header">
-            <h4>⚙️ AI ఇంజిన్ & మోడల్ కాన్ఫిగరేషన్</h4>
+            <h4>${icon('settings', { size: 18 })} AI ఇంజిన్ & మోడల్ కాన్ఫిగరేషన్</h4>
             <button id="chatbot-close-settings-btn" class="btn-icon-xs">✕</button>
           </div>
           <div class="settings-modal-body">
             <p class="settings-desc">
               ${isTe
-      ? 'ఆన్‌లైన్‌లో ఉన్నప్పుడు Google Gemini తో వేగవంతమైన సమాధానాలు పొందండి. ఇంటర్నెట్ లేనప్పుడు లేదా ఆఫ్‌లైన్ లో Gemma 4 AI స్వయంచాలకంగా నడుస్తుంది.'
-      : 'When online, Google Gemini powers advanced reasoning. When offline, Gemma 4 AI runs entirely on your device.'}
+                ? 'ఆన్‌లైన్‌లో ఉన్నప్పుడు Google Gemini తో వేగవంతమైన సమాధానాలు పొందండి. ఇంటర్నెట్ లేనప్పుడు లేదా ఆఫ్‌లైన్ లో Gemma 4 AI స్వయంచాలకంగా నడుస్తుంది.'
+                : 'When online, Google Gemini powers advanced reasoning. When offline, Gemma 4 AI runs entirely on your device.'}
             </p>
 
             <div class="form-group-custom">
               <label for="gemini-key-input" class="form-label-custom">
-                <span>🔑</span> Google Gemini API Key
+                <span>${icon('key', { size: 15 })}</span> Google Gemini API Key
               </label>
               <input
                 type="password"
@@ -193,8 +194,8 @@ function _renderChatbotDOM() {
               />
               <span class="form-hint-custom">
                 ${isTe
-      ? 'మీ వ్యక్తిగత ఉచిత కీని నమోదు చేయండి (Google AI Studio నుండి ఉచితంగా పొందవచ్చు).'
-      : 'Enter your Gemini API key (Free tier supported via Google AI Studio).'}
+                  ? 'మీ వ్యక్తిగత ఉచిత కీని నమోదు చేయండి (Google AI Studio నుండి ఉచితంగా పొందవచ్చు).'
+                  : 'Enter your Gemini API key (Free tier supported via Google AI Studio).'}
               </span>
             </div>
 
@@ -212,10 +213,10 @@ function _renderChatbotDOM() {
 
             <div style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
               <button id="test-gemini-key-btn" type="button" class="btn btn-outline btn-sm">
-                ⚡ ${isTe ? 'కీ పరీక్షించండి' : 'Test Key'}
+                ${icon('lightning', { size: 14 })} ${isTe ? 'కీ పరీక్షించండి' : 'Test Key'}
               </button>
               <button id="save-gemini-key-btn" type="button" class="btn btn-primary btn-sm">
-                💾 ${isTe ? 'సెట్టింగ్స్ సేవ్ చేయండి' : 'Save Settings'}
+                ${icon('save', { size: 14 })} ${isTe ? 'సెట్టింగ్స్ సేవ్ చేయండి' : 'Save Settings'}
               </button>
             </div>
           </div>
@@ -225,25 +226,25 @@ function _renderChatbotDOM() {
       <!-- Quick Suggestion Chips Bar -->
       <div class="chatbot-chips-bar" id="chatbot-chips-bar">
         <button class="chat-chip" data-query="తరగతి సమగ్ర ప్రగతి నివేదిక ఇవ్వండి">
-          📊 ${isTe ? 'తరగతి నివేదిక' : 'Class Report'}
+          <span>${icon('chart', { size: 14 })}</span> ${isTe ? 'తరగతి నివేదిక' : 'Class Report'}
         </button>
         <button class="chat-chip" data-query="ఎవరికి ప్రత్యేక సాధన మరియు సహాయం అవసరం?">
-          ⚠️ ${isTe ? 'ఎవరికి సాధన అవసరం?' : 'Who Needs Help?'}
+          <span>${icon('alert', { size: 14, color: '#f59e0b' })}</span> ${isTe ? 'ఎవరికి సాధన అవసరం?' : 'Who Needs Help?'}
         </button>
         <button class="chat-chip" data-query="అనిత ప్రగతి వివరాలు ఏమిటి?">
-          👧 ${isTe ? 'అనిత ప్రగతి' : 'Anitha Progress'}
+          <span>${icon('user', { size: 14 })}</span> ${isTe ? 'అనిత ప్రగతి' : 'Anitha Progress'}
         </button>
         <button class="chat-chip" data-query="స్వప్న పఠన వేగం మరియు స్కోర్ ఎంత?">
-          🌟 ${isTe ? 'స్వప్న స్కోర్' : 'Swapna Score'}
+          <span>${icon('star', { size: 14, color: '#f59e0b' })}</span> ${isTe ? 'స్వప్న స్కోర్' : 'Swapna Score'}
         </button>
         <button class="chat-chip" data-query="1 నిమిషం పఠన మూల్యాంకనం ఎలా చేయాలి?">
-          📖 ${isTe ? 'మూల్యాంకనం ఎలా చేయాలి?' : 'How to Assess?'}
+          <span>${icon('assess', { size: 14 })}</span> ${isTe ? 'మూల్యాంకనం ఎలా చేయాలి?' : 'How to Assess?'}
         </button>
         <button class="chat-chip" data-query="WCPM అంటే ఏమిటి? ఎలా లెక్కిస్తారు?">
-          ⏱️ ${isTe ? 'WCPM లెక్కింపు' : 'WCPM Formula'}
+          <span>${icon('timer', { size: 14 })}</span> ${isTe ? 'WCPM లెక్కింపు' : 'WCPM Formula'}
         </button>
         <button class="chat-chip" data-query="తెలంగాణ SCERT 5 పఠన స్థాయిలు ఏమిటి?">
-          📚 ${isTe ? '5 స్థాయిల వివరాలు' : '5 FLN Levels'}
+          <span>${icon('syllabus', { size: 14 })}</span> ${isTe ? '5 స్థాయిల వివరాలు' : '5 FLN Levels'}
         </button>
       </div>
 
@@ -279,7 +280,7 @@ function _renderChatbotDOM() {
             title="${isTe ? 'వాయిస్ ద్వారా మాట్లాడండి' : 'Speak with voice'}"
             aria-label="Voice input"
           >
-            🎙️
+            ${icon('mic', { size: 18 })}
           </button>
 
           <!-- Send Button -->

@@ -8,6 +8,7 @@ import { getAIStatus } from '../services/gemma4Offline.js';
 import { getGeminiApiKey, setGeminiApiKey, isGeminiActive, isSimulatedOffline, setSimulatedOffline } from '../services/geminiService.js';
 import { checkSupabaseStatus, syncBatchToSupabase } from '../services/supabaseService.js';
 import { getAllFromStore } from '../storage/db.js';
+import { icon } from '../utils/icons.js';
 
 export async function renderSettingsView(container, {
   isTeacherMode,
@@ -32,7 +33,7 @@ export async function renderSettingsView(container, {
             ← ${lang === 'te' ? 'డ్యాష్‌బోర్డ్‌కి తిరిగి వెళ్ళు' : 'Back to Dashboard'}
           </button>
           <h2 class="card-title" style="font-size: 1.6rem; color: var(--primary-900);">
-            <span>⚙️</span> ${lang === 'te' ? 'సిస్టమ్ సెట్టింగ్స్ & నియంత్రణలు' : 'System Settings & Controls'}
+            <span>${icon('settings', { size: 26 })}</span> ${lang === 'te' ? 'సిస్టమ్ సెట్టింగ్స్ & నియంత్రణలు' : 'System Settings & Controls'}
           </h2>
           <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">
             ${lang === 'te'
@@ -47,7 +48,7 @@ export async function renderSettingsView(container, {
         <!-- 1. Accounts -->
         <button id="set-btn-account" class="settings-tile-btn">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">🔐</span>
+            <span class="tile-icon">${user ? icon('lock', { size: 24 }) : icon('user', { size: 24 })}</span>
           </div>
           <div class="tile-content">
             <span class="tile-title">${lang === 'te' ? 'ఖాతా వివరాలు' : 'Account'}</span>
@@ -59,7 +60,7 @@ export async function renderSettingsView(container, {
         <!-- 2. Practice / Teacher Mode -->
         <button id="set-btn-mode" class="settings-tile-btn ${isTeacherMode ? 'tile-teacher-active' : ''}">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">${isTeacherMode ? '🔓' : '🔒'}</span>
+            <span class="tile-icon">${isTeacherMode ? icon('unlock', { size: 24 }) : icon('lock', { size: 24 })}</span>
           </div>
           <div class="tile-content">
             <span class="tile-title">${lang === 'te' ? 'ఉపాధ్యాయ / సాధన మోడ్' : 'Teacher / Practice'}</span>
@@ -73,7 +74,7 @@ export async function renderSettingsView(container, {
         <!-- 3. Contrast (Sunlight Mode) -->
         <button id="set-btn-contrast" class="settings-tile-btn ${isSunlight ? 'tile-contrast-active' : ''}">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">${isSunlight ? '☀️' : '🔆'}</span>
+            <span class="tile-icon">${isSunlight ? icon('sun', { size: 24 }) : icon('contrast', { size: 24 })}</span>
           </div>
           <div class="tile-content">
             <span class="tile-title">${lang === 'te' ? 'పగటి వెలుతురు కాంట్రాస్ట్' : 'Contrast Mode'}</span>
@@ -87,7 +88,7 @@ export async function renderSettingsView(container, {
         <!-- 4. Language (Telugu / English) -->
         <button id="set-btn-lang" class="settings-tile-btn">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">🌐</span>
+            <span class="tile-icon">${icon('globe', { size: 24 })}</span>
           </div>
           <div class="tile-content">
             <span class="tile-title">${lang === 'te' ? 'యాప్ భాష (Language)' : 'App Language'}</span>
@@ -99,7 +100,7 @@ export async function renderSettingsView(container, {
         <!-- 5. Offline Data & Sync -->
         <button id="set-btn-sync" class="settings-tile-btn">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">🔄</span>
+            <span class="tile-icon">${icon('sync', { size: 24 })}</span>
             ${syncStats.unsyncedCount > 0 ? `<span class="tile-count-badge">${syncStats.unsyncedCount}</span>` : ''}
           </div>
           <div class="tile-content">
@@ -120,7 +121,7 @@ export async function renderSettingsView(container, {
           return `
         <div id="set-ai-status-tile" class="settings-tile-btn ${isOff ? 'tile-ai-offline' : 'tile-ai-online'}" style="cursor: default;">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">${isOff ? '🤖' : '🌐'}</span>
+            <span class="tile-icon">${isOff ? icon('bot', { size: 24 }) : icon('globe', { size: 24 })}</span>
             ${isOff ? '<span class="tile-ai-pulse"></span>' : ''}
           </div>
           <div class="tile-content">
@@ -141,7 +142,7 @@ export async function renderSettingsView(container, {
       <!-- About Developer Button -->
         <button id="set-btn-developer" class="settings-tile-btn tile-developer">
           <div class="tile-icon-wrap">
-            <span class="tile-icon">👨‍💻</span>
+            <span class="tile-icon">${icon('developer', { size: 24 })}</span>
           </div>
           <div class="tile-content">
             <span class="tile-title">${lang === 'te' ? 'డెవలపర్ గురించి' : 'About Developer'}</span>
@@ -153,7 +154,7 @@ export async function renderSettingsView(container, {
       <!-- Detailed Info Card -->
       <div class="card" style="margin-top: 24px; padding: 22px;">
         <h3 style="font-size: 1.15rem; color: var(--primary-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-          <span>🔥</span> Firebase Project Configuration
+          <span>${icon('flame', { size: 20, color: '#f59e0b' })}</span> Firebase Project Configuration
         </h3>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
@@ -177,11 +178,11 @@ export async function renderSettingsView(container, {
 
         <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
           <button id="set-manage-acc-btn" class="btn btn-primary btn-sm">
-            🔐 ${user?.isGuest ? 'Sign In with Firebase' : 'Manage Account & Security'}
+            ${icon('lock', { size: 15 })} ${user?.isGuest ? 'Sign In with Firebase' : 'Manage Account & Security'}
           </button>
           ${!user?.isGuest ? `
             <button id="set-signout-btn" class="btn btn-outline btn-sm" style="color: #f43f5e; border-color: #f43f5e;">
-              🚪 Sign Out
+              ${icon('logout', { size: 15, color: '#f43f5e' })} Sign Out
             </button>
           ` : ''}
         </div>
@@ -190,7 +191,7 @@ export async function renderSettingsView(container, {
       <!-- Google Gemini & Gemma 4 AI Assistant Card -->
       <div class="card" style="margin-top: 24px; padding: 22px;">
         <h3 style="font-size: 1.15rem; color: var(--primary-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-          <span>🤖</span> ${lang === 'te' ? 'Google Gemini & Gemma 4 AI సహాయక ఇంజిన్' : 'Google Gemini & Gemma 4 AI Assistant'}
+          <span>${icon('sparkles', { size: 20, color: '#10b981' })}</span> ${lang === 'te' ? 'Google Gemini & Gemma 4 AI సహాయక ఇంజిన్' : 'Google Gemini & Gemma 4 AI Assistant'}
         </h3>
         <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
           ${lang === 'te'
@@ -217,7 +218,7 @@ export async function renderSettingsView(container, {
 
         <div style="background: var(--bg-card-subtle); padding: 16px; border-radius: 12px; border: 1.5px solid var(--border-light);">
           <label for="settings-gemini-key-input" style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--primary-900); margin-bottom: 6px;">
-            🔑 Google Gemini API Key
+            ${icon('key', { size: 16 })} Google Gemini API Key
           </label>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <input
@@ -229,7 +230,7 @@ export async function renderSettingsView(container, {
               value="${getGeminiApiKey()}"
             />
             <button id="settings-save-gemini-key-btn" class="btn btn-primary btn-sm">
-              💾 ${lang === 'te' ? 'కీ సేవ్ చేయండి' : 'Save Gemini Key'}
+              ${icon('save', { size: 15 })} ${lang === 'te' ? 'కీ సేవ్ చేయండి' : 'Save Gemini Key'}
             </button>
           </div>
           <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
@@ -249,7 +250,7 @@ export async function renderSettingsView(container, {
       <!-- Supabase Realtime Database Card -->
       <div class="card" style="margin-top: 24px; padding: 22px;">
         <h3 style="font-size: 1.15rem; color: var(--primary-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-          <span>⚡</span> ${lang === 'te' ? 'Supabase రియల్‌టైమ్ డేటాబేస్' : 'Supabase Real-time Database'}
+          <span>${icon('lightning', { size: 20, color: '#3ecf8e' })}</span> ${lang === 'te' ? 'Supabase రియల్‌టైమ్ డేటాబేస్' : 'Supabase Real-time Database'}
         </h3>
         <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
           ${lang === 'te'
@@ -277,14 +278,14 @@ export async function renderSettingsView(container, {
         <div style="background: var(--bg-card-subtle); padding: 16px; border-radius: 12px; border: 1.5px solid var(--border-light);">
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
             <button id="settings-test-sb-btn" class="btn btn-outline btn-sm">
-              ⚡ ${lang === 'te' ? 'టెస్ట్ కనెక్షన్' : 'Test Connection'}
+              ${icon('lightning', { size: 15 })} ${lang === 'te' ? 'టెస్ట్ కనెక్షన్' : 'Test Connection'}
             </button>
             <button id="settings-sync-all-sb-btn" class="btn btn-outline btn-sm" style="color: #3ecf8e; border-color: #3ecf8e;">
-              🔄 ${lang === 'te' ? 'అన్ని డేటాను Supabase కి పంపండి' : 'Sync All to Supabase'}
+              ${icon('sync', { size: 15, color: '#3ecf8e' })} ${lang === 'te' ? 'అన్ని డేటాను Supabase కి పంపండి' : 'Sync All to Supabase'}
             </button>
           </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted);">
-            <span>🔗 ${lang === 'te' ? 'కనెక్ట్ అయింది:' : 'Connected to:'} https://ifvgzvmxewdccudafsmm.supabase.co</span>
+          <div style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+            <span>${icon('link', { size: 14 })} ${lang === 'te' ? 'కనెక్ట్ అయింది:' : 'Connected to:'} https://ifvgzvmxewdccudafsmm.supabase.co</span>
           </div>
           <div id="sb-feedback-msg" style="margin-top: 10px; font-size: 0.82rem; font-weight: 600; display: none;"></div>
         </div>

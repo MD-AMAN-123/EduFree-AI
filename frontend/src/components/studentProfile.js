@@ -3,6 +3,7 @@ import { t, getLanguage } from '../data/i18n.js';
 import { getFromStore, getAllFromStore } from '../storage/db.js';
 import { formatDate } from '../utils/helpers.js';
 import { TELUGU_LEVELS } from '../data/teluguContent.js';
+import { icon } from '../utils/icons.js';
 
 export async function renderStudentProfile(container, { studentId, onBack, onStartAssessment, onStartPractice }) {
   const lang = getLanguage();
@@ -43,10 +44,10 @@ export async function renderStudentProfile(container, { studentId, onBack, onSta
 
           <div style="display: flex; gap: 8px;">
             <button id="btn-profile-assess-now" class="btn btn-primary btn-sm">
-              <span>📖</span> ${t('action_assess')}
+              <span>${icon('assess', { size: 15 })}</span> ${t('action_assess')}
             </button>
             <button id="btn-profile-practice" class="btn btn-accent btn-sm">
-              <span>🎯</span> ${t('action_practice')}
+              <span>${icon('practice', { size: 15 })}</span> ${t('action_practice')}
             </button>
             <button id="btn-profile-back" class="btn btn-outline btn-sm">
               ← ${t('back_btn')}
@@ -66,7 +67,7 @@ export async function renderStudentProfile(container, { studentId, onBack, onSta
       <!-- Reading Fluency (WCPM) Trajectory Chart -->
       <div class="card">
         <h3 class="card-title" style="margin-bottom: 14px;">
-          <span>📈</span> ${t('profile_chart_title')}
+          <span>${icon('trending', { size: 20 })}</span> ${t('profile_chart_title')}
         </h3>
 
         ${studentAssessments.length === 0 ? `
@@ -105,7 +106,7 @@ export async function renderStudentProfile(container, { studentId, onBack, onSta
       <!-- Assessment History List -->
       <div class="card">
         <h3 class="card-title" style="margin-bottom: 12px;">
-          <span>📋</span> ${t('profile_history')}
+          <span>${icon('clipboard', { size: 20 })}</span> ${t('profile_history')}
         </h3>
 
         ${studentAssessments.length === 0 ? `
@@ -118,8 +119,8 @@ export async function renderStudentProfile(container, { studentId, onBack, onSta
                   <div style="font-weight: 700; font-size: 1rem; color: var(--primary-900); font-family: var(--font-telugu);">
                     ${as.passageTitle}
                   </div>
-                  <span style="font-size: 0.82rem; color: var(--text-muted);">
-                    📅 ${formatDate(as.date, lang)}
+                  <span style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                    ${icon('calendar', { size: 14 })} ${formatDate(as.date, lang)}
                   </span>
                 </div>
 

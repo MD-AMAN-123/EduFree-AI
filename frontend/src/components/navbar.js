@@ -3,6 +3,7 @@ import { t, getLanguage, setLanguage } from '../data/i18n.js';
 import { getSyncStats } from '../storage/syncQueue.js';
 import { getCurrentSessionUser } from '../services/firebaseAuth.js';
 import { getAIStatus } from '../services/gemma4Offline.js';
+import { icon } from '../utils/icons.js';
 
 // Track drawer state to preserve across re-renders
 let _drawerOpen = false;
@@ -42,7 +43,7 @@ export async function renderNavbar(container, {
           <!-- User / Firebase Auth Status Button -->
           <button id="auth-account-btn" class="control-icon-btn ${user?.isGuest ? 'is-guest-badge' : (user ? 'is-auth-active' : '')}" title="${user?.email || 'Login / Firebase Account'}" aria-label="User Account">
             <span class="ctrl-icon-wrap">
-              <span class="ctrl-icon" aria-hidden="true">${user?.isGuest ? '👤' : (user ? '🔐' : '🔑')}</span>
+              <span class="ctrl-icon" aria-hidden="true">${user?.isGuest ? icon('user', { size: 16 }) : (user ? icon('lock', { size: 16 }) : icon('key', { size: 16 }))}</span>
             </span>
             <span class="ctrl-label">
               <span class="desktop-text">${user ? (user.displayName || user.email?.split('@')[0]) : 'Login'}</span>
@@ -53,7 +54,7 @@ export async function renderNavbar(container, {
           <button id="sync-status-pill" class="status-pill" title="${t('nav_sync_settings')}" aria-label="Sync and offline status">
             <span class="ctrl-icon-wrap sync-icon-wrap">
               <span class="status-dot ${syncStats.isOnline ? '' : 'offline'}"></span>
-              <span class="ctrl-icon mobile-dock-icon" aria-hidden="true">🔄</span>
+              <span class="ctrl-icon mobile-dock-icon" aria-hidden="true">${icon('sync', { size: 15 })}</span>
               ${syncStats.unsyncedCount > 0 ? `<span class="dock-badge-pill" aria-label="${syncStats.unsyncedCount} unsynced">${syncStats.unsyncedCount}</span>` : ''}
             </span>
             <span class="ctrl-label">
@@ -67,12 +68,12 @@ export async function renderNavbar(container, {
             return ai.isOffline ? `
             <div id="gemma4-ai-badge" class="gemma4-badge" title="Gemma 4 Offline AI is powering the app" aria-label="Gemma 4 AI active">
               <span class="gemma4-pulse"></span>
-              <span class="gemma4-icon">🤖</span>
+              <span class="gemma4-icon">${icon('bot', { size: 16 })}</span>
               <span class="gemma4-label">${lang === 'te' ? 'Gemma 4 AI' : 'Gemma 4 AI'}</span>
             </div>` : `
             <div id="gemma4-ai-badge" class="gemma4-badge gemma4-badge-online" title="Online mode — Firebase active" aria-label="Online mode">
               <span class="gemma4-dot-online"></span>
-              <span class="gemma4-icon">🌐</span>
+              <span class="gemma4-icon">${icon('globe', { size: 16 })}</span>
               <span class="gemma4-label">${lang === 'te' ? 'ఆన్‌లైన్' : 'Online'}</span>
             </div>`;
           })()}
@@ -80,7 +81,7 @@ export async function renderNavbar(container, {
           <!-- Sunlight / High Contrast Mode Toggle -->
           <button id="sunlight-toggle-btn" class="control-icon-btn ${isSunlight ? 'is-active-sunlight' : ''}" title="${t('high_contrast_toggle')}" aria-label="${t('high_contrast_toggle')}">
             <span class="ctrl-icon-wrap">
-              <span class="ctrl-icon" aria-hidden="true">${isSunlight ? '☀️' : '🔆'}</span>
+              <span class="ctrl-icon" aria-hidden="true">${isSunlight ? icon('sun', { size: 16 }) : icon('contrast', { size: 16 })}</span>
             </span>
             <span class="ctrl-label">
               <span class="desktop-text">${isSunlight ? t('sunlight_normal') : t('sunlight_contrast')}</span>
@@ -90,7 +91,7 @@ export async function renderNavbar(container, {
           <!-- Bilingual Language Toggle Button -->
           <button id="lang-toggle-btn" class="control-icon-btn" title="Toggle Telugu / English" aria-label="Toggle language">
             <span class="ctrl-icon-wrap">
-              <span class="ctrl-icon" aria-hidden="true">🌐</span>
+              <span class="ctrl-icon" aria-hidden="true">${icon('globe', { size: 16 })}</span>
               <span class="lang-indicator-badge" aria-hidden="true">${lang === 'te' ? 'TE' : 'EN'}</span>
             </span>
             <span class="ctrl-label">
@@ -101,7 +102,7 @@ export async function renderNavbar(container, {
           <!-- Teacher Mode / Student Practice Mode PIN Lock Toggle -->
           <button id="teacher-pin-toggle-btn" class="control-icon-btn ${isTeacherMode ? 'is-teacher-active' : 'is-student-locked'}" style="${isTeacherMode ? 'background: rgba(245, 158, 11, 0.25); border-color: #f59e0b;' : ''}" title="${isTeacherMode ? t('lock_to_practice') : t('unlock')}" aria-label="Teacher security lock">
             <span class="ctrl-icon-wrap">
-              <span class="ctrl-icon" aria-hidden="true">${isTeacherMode ? '🔓' : '🔒'}</span>
+              <span class="ctrl-icon" aria-hidden="true">${isTeacherMode ? icon('unlock', { size: 16 }) : icon('lock', { size: 16 })}</span>
             </span>
             <span class="ctrl-label">
               <span class="desktop-text">${isTeacherMode ? t('teacher_btn_label') : t('student_btn_label')}</span>
@@ -120,28 +121,28 @@ export async function renderNavbar(container, {
       <!-- Desktop Navigation Tabs (horizontal bar) -->
       <nav class="nav-tabs-bar" role="navigation" aria-label="Main Navigation">
         <button class="nav-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
-          <span>📊</span> ${t('nav_dashboard')}
+          <span>${icon('dashboard', { size: 17 })}</span> ${t('nav_dashboard')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'assess' ? 'active' : ''}" data-tab="assess">
-          <span>📖</span> ${t('nav_assess')}
+          <span>${icon('assess', { size: 17 })}</span> ${t('nav_assess')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'practice' ? 'active' : ''}" data-tab="practice">
-          <span>🎯</span> ${t('nav_practice')}
+          <span>${icon('practice', { size: 17 })}</span> ${t('nav_practice')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'activities' ? 'active' : ''}" data-tab="activities" style="${activeTab === 'activities' ? 'background: rgba(245, 158, 11, 0.2); border-bottom-color: #f59e0b;' : ''}">
-          <span>🎮</span> ${lang === 'te' ? 'కృత్యాలు' : 'Activities'}
+          <span>${icon('activities', { size: 17 })}</span> ${lang === 'te' ? 'కృత్యాలు' : 'Activities'}
         </button>
         <button class="nav-tab-btn ${activeTab === 'worksheets' ? 'active' : ''}" data-tab="worksheets">
-          <span>🖨️</span> ${t('nav_worksheets')}
+          <span>${icon('worksheets', { size: 17 })}</span> ${t('nav_worksheets')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'syllabus' ? 'active' : ''}" data-tab="syllabus">
-          <span>📚</span> ${t('nav_syllabus')}
+          <span>${icon('syllabus', { size: 17 })}</span> ${t('nav_syllabus')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'sync' ? 'active' : ''}" data-tab="sync">
-          <span>🔄</span> ${t('nav_sync_settings')}
+          <span>${icon('sync', { size: 17 })}</span> ${t('nav_sync_settings')}
         </button>
         <button class="nav-tab-btn ${activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
-          <span>⚙️</span> ${lang === 'te' ? 'సెట్టింగ్స్' : 'Settings'}
+          <span>${icon('settings', { size: 17 })}</span> ${lang === 'te' ? 'సెట్టింగ్స్' : 'Settings'}
         </button>
       </nav>
 
@@ -166,7 +167,7 @@ export async function renderNavbar(container, {
         <!-- Dedicated Settings Buttons Section (Accounts, Practice/Teacher, Contrast, Language, Sync) -->
         <div class="drawer-settings-card">
           <div class="drawer-settings-header">
-            <span class="settings-header-icon">⚙️</span>
+            <span class="settings-header-icon">${icon('settings', { size: 18 })}</span>
             <span class="settings-header-title">${lang === 'te' ? 'సెట్టింగ్స్ & నియంత్రణలు' : 'Settings & Controls'}</span>
           </div>
 
@@ -175,7 +176,7 @@ export async function renderNavbar(container, {
             <!-- 1. Accounts Button -->
             <button id="drawer-btn-account" class="drawer-tile-btn ${user?.isGuest ? 'tile-guest' : 'tile-auth'}" title="Account & Firebase Security">
               <div class="tile-icon-box">
-                <span class="tile-icon">🔐</span>
+                <span class="tile-icon">${user?.isGuest ? icon('user', { size: 20 }) : icon('lock', { size: 20 })}</span>
               </div>
               <span class="tile-label">${lang === 'te' ? 'ఖాతా' : 'Account'}</span>
             </button>
@@ -183,7 +184,7 @@ export async function renderNavbar(container, {
             <!-- 2. Practice / Teacher Mode Button -->
             <button id="drawer-btn-mode" class="drawer-tile-btn ${isTeacherMode ? 'tile-teacher-active' : 'tile-student'}" title="Toggle Teacher PIN / Student Practice Mode">
               <div class="tile-icon-box">
-                <span class="tile-icon">${isTeacherMode ? '🔓' : '🔒'}</span>
+                <span class="tile-icon">${isTeacherMode ? icon('unlock', { size: 20 }) : icon('lock', { size: 20 })}</span>
               </div>
               <span class="tile-label">${isTeacherMode ? (lang === 'te' ? 'ఉపాధ్యాయ' : 'Teacher') : (lang === 'te' ? 'సాధన' : 'Practice')}</span>
             </button>
@@ -191,7 +192,7 @@ export async function renderNavbar(container, {
             <!-- 3. Contrast Button -->
             <button id="drawer-btn-contrast" class="drawer-tile-btn ${isSunlight ? 'tile-sunlight-active' : ''}" title="Sunlight / High Contrast Mode">
               <div class="tile-icon-box">
-                <span class="tile-icon">${isSunlight ? '☀️' : '🔆'}</span>
+                <span class="tile-icon">${isSunlight ? icon('sun', { size: 20 }) : icon('contrast', { size: 20 })}</span>
               </div>
               <span class="tile-label">${lang === 'te' ? 'కాంట్రాస్ట్' : 'Contrast'}</span>
             </button>
@@ -199,7 +200,7 @@ export async function renderNavbar(container, {
             <!-- 4. Language Button -->
             <button id="drawer-btn-lang" class="drawer-tile-btn" title="Toggle Telugu / English">
               <div class="tile-icon-box">
-                <span class="tile-icon">🌐</span>
+                <span class="tile-icon">${icon('globe', { size: 20 })}</span>
                 <span class="tile-badge-lang">${lang === 'te' ? 'EN' : 'TE'}</span>
               </div>
               <span class="tile-label">${lang === 'te' ? 'English' : 'తెలుగు'}</span>
@@ -208,7 +209,7 @@ export async function renderNavbar(container, {
             <!-- 5. Sync Button -->
             <button id="drawer-btn-sync" class="drawer-tile-btn" title="Data Sync">
               <div class="tile-icon-box">
-                <span class="tile-icon">🔄</span>
+                <span class="tile-icon">${icon('sync', { size: 20 })}</span>
                 ${syncStats.unsyncedCount > 0 ? `<span class="tile-badge-count">${syncStats.unsyncedCount}</span>` : ''}
               </div>
               <span class="tile-label">${syncStats.unsyncedCount > 0 ? `${syncStats.unsyncedCount} Sync` : 'Sync'}</span>
@@ -220,42 +221,42 @@ export async function renderNavbar(container, {
           <div class="drawer-nav-section-title">${lang === 'te' ? 'ప్రధాన విభాగాలు' : 'Main Navigation'}</div>
           
           <button class="drawer-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
-            <span class="drawer-nav-icon">📊</span>
+            <span class="drawer-nav-icon">${icon('dashboard', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_dashboard')}</span>
             ${activeTab === 'dashboard' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'assess' ? 'active' : ''}" data-tab="assess">
-            <span class="drawer-nav-icon">📖</span>
+            <span class="drawer-nav-icon">${icon('assess', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_assess')}</span>
             ${activeTab === 'assess' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'practice' ? 'active' : ''}" data-tab="practice">
-            <span class="drawer-nav-icon">🎯</span>
+            <span class="drawer-nav-icon">${icon('practice', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_practice')}</span>
             ${activeTab === 'practice' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'activities' ? 'active' : ''}" data-tab="activities">
-            <span class="drawer-nav-icon">🎮</span>
+            <span class="drawer-nav-icon">${icon('activities', { size: 18 })}</span>
             <span class="drawer-nav-label">${lang === 'te' ? 'కృత్యాలు (Activities)' : 'Activities Center'}</span>
             ${activeTab === 'activities' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'worksheets' ? 'active' : ''}" data-tab="worksheets">
-            <span class="drawer-nav-icon">🖨️</span>
+            <span class="drawer-nav-icon">${icon('worksheets', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_worksheets')}</span>
             ${activeTab === 'worksheets' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'syllabus' ? 'active' : ''}" data-tab="syllabus">
-            <span class="drawer-nav-icon">📚</span>
+            <span class="drawer-nav-icon">${icon('syllabus', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_syllabus')}</span>
             ${activeTab === 'syllabus' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'sync' ? 'active' : ''}" data-tab="sync">
-            <span class="drawer-nav-icon">🔄</span>
+            <span class="drawer-nav-icon">${icon('sync', { size: 18 })}</span>
             <span class="drawer-nav-label">${t('nav_sync_settings')}</span>
             ${activeTab === 'sync' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
           <button class="drawer-nav-btn ${activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
-            <span class="drawer-nav-icon">⚙️</span>
+            <span class="drawer-nav-icon">${icon('settings', { size: 18 })}</span>
             <span class="drawer-nav-label">${lang === 'te' ? 'పూర్తి సెట్టింగ్స్ పేజీ' : 'Full Settings Page'}</span>
             ${activeTab === 'settings' ? '<span class="drawer-active-dot"></span>' : ''}
           </button>
@@ -276,7 +277,7 @@ export async function renderNavbar(container, {
         <!-- 1. Accounts Button -->
         <button id="mobile-dock-account" class="mobile-dock-btn ${user?.isGuest ? 'dock-guest' : 'dock-auth'}" aria-label="Account">
           <div class="dock-icon-wrap">
-            <span class="dock-icon">🔐</span>
+            <span class="dock-icon">${user?.isGuest ? icon('user', { size: 20 }) : icon('lock', { size: 20 })}</span>
           </div>
           <span class="dock-label">${lang === 'te' ? 'ఖాతా' : 'Account'}</span>
         </button>
@@ -284,7 +285,7 @@ export async function renderNavbar(container, {
         <!-- 2. Language Button -->
         <button id="mobile-dock-lang" class="mobile-dock-btn" aria-label="Language Toggle">
           <div class="dock-icon-wrap">
-            <span class="dock-icon">🌐</span>
+            <span class="dock-icon">${icon('globe', { size: 20 })}</span>
             <span class="dock-badge-lang">${lang === 'te' ? 'EN' : 'TE'}</span>
           </div>
           <span class="dock-label">${lang === 'te' ? 'English' : 'తెలుగు'}</span>
@@ -293,7 +294,7 @@ export async function renderNavbar(container, {
         <!-- 3. Sync Button -->
         <button id="mobile-dock-sync" class="mobile-dock-btn" aria-label="Data Sync">
           <div class="dock-icon-wrap">
-            <span class="dock-icon">🔄</span>
+            <span class="dock-icon">${icon('sync', { size: 20 })}</span>
             ${syncStats.unsyncedCount > 0 ? `<span class="dock-badge-count">${syncStats.unsyncedCount}</span>` : ''}
           </div>
           <span class="dock-label">${syncStats.unsyncedCount > 0 ? `${syncStats.unsyncedCount} Sync` : (lang === 'te' ? 'సింక్' : 'Sync')}</span>
@@ -302,7 +303,7 @@ export async function renderNavbar(container, {
         <!-- 4. Activities Button (Stylish Practice & Activities Center) -->
         <button id="mobile-dock-activities" class="mobile-dock-btn dock-btn-highlight ${activeTab === 'activities' ? 'dock-active' : ''}" aria-label="Activities">
           <div class="dock-icon-wrap dock-icon-special">
-            <span class="dock-icon">🎮</span>
+            <span class="dock-icon">${icon('activities', { size: 22 })}</span>
           </div>
           <span class="dock-label dock-label-special">${lang === 'te' ? 'కృత్యాలు' : 'Activities'}</span>
         </button>
@@ -310,7 +311,7 @@ export async function renderNavbar(container, {
         <!-- 5. Guidelines Button (Telangana FLN Assessment Rubric & Guidelines) -->
         <button id="mobile-dock-guidelines" class="mobile-dock-btn ${activeTab === 'syllabus' ? 'dock-active' : ''}" aria-label="Guidelines">
           <div class="dock-icon-wrap">
-            <span class="dock-icon">📋</span>
+            <span class="dock-icon">${icon('clipboard', { size: 20 })}</span>
           </div>
           <span class="dock-label">${lang === 'te' ? 'మార్గదర్శకాలు' : 'Guidelines'}</span>
         </button>
