@@ -1,7 +1,8 @@
-// EduFree.AI Teacher-Led Telugu Reading Assessment ("ప్రతీ బిడ్డ చదవాలి")
+// EduFree.AI Bilingual Foundational Reading Assessment (Telugu & English FLN)
 import { t, getLanguage } from '../data/i18n.js';
 import { getAllFromStore, putInStore, getSetting } from '../storage/db.js';
 import { TELUGU_PASSAGES, TELUGU_LEVELS } from '../data/teluguContent.js';
+import { ENGLISH_PASSAGES, ENGLISH_LEVELS } from '../data/englishContent.js';
 import { calculateAssessmentMetrics, ERROR_TYPES } from '../data/assessmentRules.js';
 import { generateRecommendations } from '../data/recommendations.js';
 import { queueMutation } from '../storage/syncQueue.js';
@@ -22,21 +23,16 @@ export async function renderAssessment(container, { initialStudentId = null, onF
   try {
     const raw = localStorage.getItem('edufree_assessment_draft');
     if (raw) savedDraft = JSON.parse(raw);
-  } catch (e) {}
+  } catch (e) { }
+
+  let assessmentLanguage = savedDraft?.assessmentLanguage || 'te'; // 'te' | 'en'
+  let activePassages = assessmentLanguage === 'en' ? ENGLISH_PASSAGES : TELUGU_PASSAGES;
+  let activeLevels = assessmentLanguage === 'en' ? ENGLISH_LEVELS : TELUGU_LEVELS;
 
   let selectedStudentId = initialStudentId || savedDraft?.studentId || classStudents[0]?.id || null;
-  let selectedPassageId = savedDraft?.passageId || TELUGU_PASSAGES[0].id;
+  let selectedPassageId = savedDraft?.passageId || activePassages[0].id;
 
-  let currentStep = savedDraft ? (savedDraft.currentStep || 2) : 1; // 1: Setup, 2: Reading Observation, 3: Comprehension, 4: Summary
-
-  let currentPassage = TELUGU_PASSAGES.find((p) => p.id === selectedPassageId) || TELUGU_PASSAGES[0];
-  
-  // Initialize word states
-  let wordStates = savedDraft?.wordStates || currentPassage.words.map((w, idx) => ({
-    index: idx,
-    word: w,
-    state: ERROR_TYPES.ACCURATE // Default accurate, teacher taps to mark errors
-  }));
+  let currentPassage = activePassages.find((p) => p.id === selectedPassageId) || activePassages[0];
 
   // Timer state
   let timerSeconds = savedDraft?.timerSeconds || 60;
@@ -44,6 +40,28 @@ export async function renderAssessment(container, { initialStudentId = null, onF
   let isTimerRunning = false;
   let timerInterval = null;
   let elapsedSeconds = savedDraft?.elapsedSeconds || 0;
+
+  // Voice Auto-Evaluation State
+  let isVoiceEvalActive = false;
+  let speechRecognizer = null;
+  let lastRecognizedWordIndex = -1;
+
+  // Initialize word states (sanitize against legacy drafts that defaulted all words to 'accurate')
+  let wordStates = savedDraft?.wordStates;
+  const isLegacyAllAccurateDraft = Array.isArray(wordStates) && wordStates.length > 0 && wordStates.every((w) => w.state === 'accurate');
+  if (!wordStates || isLegacyAllAccurateDraft) {
+    wordStates = currentPassage.words.map((w, idx) => ({
+      index: idx,
+      word: w,
+      state: ERROR_TYPES.UNATTEMPTED // Starts unattempted, turns accurate as read in real-time
+    }));
+    if (isLegacyAllAccurateDraft) {
+      elapsedSeconds = 0;
+      timerSeconds = 60;
+    }
+  }
+
+  let currentStep = (savedDraft && !isLegacyAllAccurateDraft) ? (savedDraft.currentStep || 2) : 1; // 1: Setup, 2: Reading Observation, 3: Comprehension, 4: Summary
 
   // Qualitative Observations
   let observations = savedDraft?.observations || {
@@ -60,12 +78,25 @@ export async function renderAssessment(container, { initialStudentId = null, onF
   let comprehensionResponses = savedDraft?.comprehensionResponses || currentPassage.comprehensionQuestions.map(() => 'correct');
   let teacherOverrideLevel = null;
 
+  function stopVoiceRecognition() {
+    if (speechRecognizer) {
+      try {
+        speechRecognizer.onend = null;
+        speechRecognizer.onerror = null;
+        speechRecognizer.stop();
+      } catch (e) { }
+      speechRecognizer = null;
+    }
+    isVoiceEvalActive = false;
+  }
+
   // Auto-save draft every 2 seconds
   if (draftAutoSaveTimer) clearInterval(draftAutoSaveTimer);
   draftAutoSaveTimer = setInterval(() => {
     if (currentStep === 2 || currentStep === 3) {
       const draft = {
         currentStep,
+        assessmentLanguage,
         studentId: selectedStudentId,
         passageId: selectedPassageId,
         wordStates,
@@ -81,6 +112,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
   }, 2000);
 
   function clearDraft() {
+    stopVoiceRecognition();
     if (draftAutoSaveTimer) clearInterval(draftAutoSaveTimer);
     localStorage.removeItem('edufree_assessment_draft');
   }
@@ -100,6 +132,18 @@ export async function renderAssessment(container, { initialStudentId = null, onF
   // --- Step 1: Student & Passage Selection ---
   function renderSetupStep() {
     const student = classStudents.find((s) => s.id === selectedStudentId);
+    activePassages = assessmentLanguage === 'en' ? ENGLISH_PASSAGES : TELUGU_PASSAGES;
+    activeLevels = assessmentLanguage === 'en' ? ENGLISH_LEVELS : TELUGU_LEVELS;
+    if (!activePassages.find((p) => p.id === selectedPassageId)) {
+      selectedPassageId = activePassages[0].id;
+      currentPassage = activePassages[0];
+      wordStates = currentPassage.words.map((w, idx) => ({
+        index: idx,
+        word: w,
+        state: ERROR_TYPES.UNATTEMPTED
+      }));
+      comprehensionResponses = currentPassage.comprehensionQuestions.map(() => 'correct');
+    }
 
     container.innerHTML = `
       <div class="card" style="max-width: 680px; margin: 0 auto;">
@@ -110,6 +154,19 @@ export async function renderAssessment(container, { initialStudentId = null, onF
           <span style="font-size: 0.82rem; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700;">
             ${t('step_prefix')} 1/4: ${t('step_1_title')}
           </span>
+        </div>
+
+        <!-- Language Selector (Telugu FLN / English FLN) -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="font-weight: 700;">${t('assess_lang_label')}</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button type="button" id="btn-assess-lang-te" class="btn ${assessmentLanguage === 'te' ? 'btn-primary' : 'btn-outline'}" style="padding: 10px; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🇮🇳</span> ${t('assess_lang_te')}
+            </button>
+            <button type="button" id="btn-assess-lang-en" class="btn ${assessmentLanguage === 'en' ? 'btn-primary' : 'btn-outline'}" style="padding: 10px; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🇬🇧</span> ${t('assess_lang_en')}
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -126,7 +183,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         <div class="form-group">
           <label class="form-label" for="select-passage">${t('select_passage_label')}</label>
           <select id="select-passage" class="form-input te-text">
-            ${TELUGU_PASSAGES.map((p) => `
+            ${activePassages.map((p) => `
               <option value="${p.id}" ${p.id === selectedPassageId ? 'selected' : ''}>
                 ${lang === 'te' ? p.title_te : p.title_en} (${p.difficulty} • ${p.wordCount} ${t('words_suffix')} • ${p.grade_recommendation})
               </option>
@@ -165,19 +222,65 @@ export async function renderAssessment(container, { initialStudentId = null, onF
       </div>
     `;
 
+    // Language Toggle Click Handlers
+    container.querySelector('#btn-assess-lang-te').onclick = () => {
+      if (assessmentLanguage !== 'te') {
+        assessmentLanguage = 'te';
+        activePassages = TELUGU_PASSAGES;
+        activeLevels = TELUGU_LEVELS;
+        selectedPassageId = activePassages[0].id;
+        currentPassage = activePassages[0];
+        wordStates = currentPassage.words.map((w, idx) => ({
+          index: idx,
+          word: w,
+          state: ERROR_TYPES.UNATTEMPTED
+        }));
+        comprehensionResponses = currentPassage.comprehensionQuestions.map(() => 'correct');
+        renderSetupStep();
+      }
+    };
+
+    container.querySelector('#btn-assess-lang-en').onclick = () => {
+      if (assessmentLanguage !== 'en') {
+        assessmentLanguage = 'en';
+        activePassages = ENGLISH_PASSAGES;
+        activeLevels = ENGLISH_LEVELS;
+        selectedPassageId = activePassages[0].id;
+        currentPassage = activePassages[0];
+        wordStates = currentPassage.words.map((w, idx) => ({
+          index: idx,
+          word: w,
+          state: ERROR_TYPES.UNATTEMPTED
+        }));
+        comprehensionResponses = currentPassage.comprehensionQuestions.map(() => 'correct');
+        renderSetupStep();
+      }
+    };
+
     container.querySelector('#select-student').onchange = (e) => {
       selectedStudentId = e.target.value;
+      wordStates = currentPassage.words.map((w, idx) => ({
+        index: idx,
+        word: w,
+        state: ERROR_TYPES.UNATTEMPTED
+      }));
+      timerSeconds = 60;
+      elapsedSeconds = 0;
+      lastRecognizedWordIndex = -1;
     };
 
     container.querySelector('#select-passage').onchange = (e) => {
       selectedPassageId = e.target.value;
-      currentPassage = TELUGU_PASSAGES.find((p) => p.id === selectedPassageId) || TELUGU_PASSAGES[0];
+      currentPassage = activePassages.find((p) => p.id === selectedPassageId) || activePassages[0];
       wordStates = currentPassage.words.map((w, idx) => ({
         index: idx,
         word: w,
-        state: ERROR_TYPES.ACCURATE
+        state: ERROR_TYPES.UNATTEMPTED
       }));
       comprehensionResponses = currentPassage.comprehensionQuestions.map(() => 'correct');
+      timerSeconds = 60;
+      elapsedSeconds = 0;
+      lastRecognizedWordIndex = -1;
       renderSetupStep();
     };
 
@@ -187,6 +290,14 @@ export async function renderAssessment(container, { initialStudentId = null, onF
     };
 
     container.querySelector('#btn-start-reading-step').onclick = () => {
+      wordStates = currentPassage.words.map((w, idx) => ({
+        index: idx,
+        word: w,
+        state: ERROR_TYPES.UNATTEMPTED
+      }));
+      timerSeconds = 60;
+      elapsedSeconds = 0;
+      lastRecognizedWordIndex = -1;
       currentStep = 2;
       render();
     };
@@ -242,11 +353,11 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         <!-- Live Metrics Bar -->
         <div class="assessment-live-stats">
           <div class="live-stat-box">
-            <div class="live-stat-val" id="stat-wcpm">${metrics.wcpm}</div>
+            <div class="live-stat-val" id="stat-wcpm">${(elapsedSeconds > 0 && metrics.wordsAttempted > 0) ? metrics.wcpm : 0}</div>
             <div class="live-stat-lbl">WCPM (${t('speed_unit')})</div>
           </div>
           <div class="live-stat-box">
-            <div class="live-stat-val" id="stat-acc" style="color: ${metrics.accuracyPercentage >= 85 ? 'var(--primary-700)' : '#e11d48'};">${metrics.accuracyPercentage}%</div>
+            <div class="live-stat-val" id="stat-acc" style="color: ${(metrics.wordsAttempted > 0 && metrics.accuracyPercentage < 85) ? '#e11d48' : 'var(--primary-700)'};">${metrics.wordsAttempted > 0 ? `${metrics.accuracyPercentage}%` : '100%'}</div>
             <div class="live-stat-lbl">${t('accuracy_label')}</div>
           </div>
           <div class="live-stat-box">
@@ -259,7 +370,31 @@ export async function renderAssessment(container, { initialStudentId = null, onF
           </div>
         </div>
 
-        <!-- Interactive Telugu Passage Box with Tap-to-Mark Words -->
+        <!-- Voice Auto-Evaluation & Assessment Language Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.8rem; font-weight: 800; background: var(--primary-100); color: var(--primary-800); padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
+              ${assessmentLanguage === 'en' ? '🇬🇧 English FLN Oral Assessment' : '🇮🇳 తెలుగు FLN మౌఖిక మూల్యాంకనం'}
+            </span>
+          </div>
+
+          <!-- Voice Auto-Evaluation Toggle -->
+          <button id="btn-toggle-voice-eval" class="btn btn-sm ${isVoiceEvalActive ? 'btn-danger' : 'btn-outline'}" style="display: flex; align-items: center; gap: 6px; font-weight: 700; border-radius: var(--radius-full); transition: all 0.2s ease;">
+            <span>${icon('mic', { size: 15 })}</span>
+            <span id="voice-eval-btn-label">${isVoiceEvalActive ? t('voice_eval_toggle_on') : t('voice_eval_toggle_off')}</span>
+          </button>
+        </div>
+
+        <!-- Voice Live Heard Status Banner -->
+        <div id="voice-eval-banner" class="animate-fade-in" style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px; display: ${isVoiceEvalActive ? 'flex' : 'none'}; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 0.86rem; color: var(--primary-900); display: flex; align-items: center; gap: 8px;">
+            <span class="voice-pulsing-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block; box-shadow: 0 0 6px #ef4444;"></span>
+            <span><strong>${t('voice_eval_listening')}</strong> <span id="voice-eval-heard-text" style="color: var(--primary-800); font-weight: 700; font-style: italic;">...</span></span>
+          </div>
+          <span style="font-size: 0.76rem; color: var(--text-muted);">${t('voice_eval_active_hint')}</span>
+        </div>
+
+        <!-- Interactive Telugu/English Passage Box with Tap-to-Mark Words -->
         <div class="passage-box">
           <div class="passage-header-meta">
             <span class="passage-title">${lang === 'te' ? currentPassage.title_te : currentPassage.title_en}</span>
@@ -280,23 +415,39 @@ export async function renderAssessment(container, { initialStudentId = null, onF
             `).join('')}
           </div>
 
-          <!-- Color Marker Legend -->
-          <div class="marker-legend">
-            <div class="legend-item">
-              <span class="legend-swatch" style="background: var(--mark-accurate-border);"></span>
-              <span>${t('mark_accurate')}</span>
+          <!-- Color Marker Legend & Quick Controls -->
+          <div class="marker-legend" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+              <div class="legend-item">
+                <span class="legend-swatch" style="background: #ffffff; border: 1.5px solid var(--border-light);"></span>
+                <span>${lang === 'te' ? 'చదవవలసినవి' : 'Pending'}</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch" style="background: var(--mark-accurate-border);"></span>
+                <span>${t('mark_accurate')}</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch" style="background: var(--mark-misread-border); border: 1px dashed #d97706;"></span>
+                <span>${t('mark_substituted')}</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch" style="background: var(--mark-skipped-border);"></span>
+                <span>${t('mark_skipped')}</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch" style="background: var(--mark-prompted-border);"></span>
+                <span>${t('mark_prompted')}</span>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-swatch" style="background: var(--mark-skipped-border);"></span>
-              <span>${t('mark_skipped')}</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch" style="background: var(--mark-misread-border); border: 1px dashed #d97706;"></span>
-              <span>${t('mark_substituted')}</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch" style="background: var(--mark-prompted-border);"></span>
-              <span>${t('mark_prompted')}</span>
+
+            <!-- Quick Action Buttons -->
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-mark-all-read" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 4px 8px; font-weight: 600;" title="Mark all words as read accurately">
+                ✓ ${lang === 'te' ? 'అన్నీ చదివారు' : 'All Read'}
+              </button>
+              <button id="btn-reset-words" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 4px 8px; font-weight: 600;" title="Reset all words">
+                ↺ ${lang === 'te' ? 'రీసెట్' : 'Reset'}
+              </button>
             </div>
           </div>
         </div>
@@ -358,13 +509,59 @@ export async function renderAssessment(container, { initialStudentId = null, onF
       </div>
     `;
 
-    // Attach Word Tap Cycle Handler (Accurate -> Substituted -> Skipped -> Prompted -> Accurate)
+    // Dedicated Live Metrics Updater
+    function updateLiveMetricsDisplay() {
+      const currentSeconds = elapsedSeconds > 0 ? elapsedSeconds : (timerMode === '60s' ? 60 - timerSeconds : 0);
+      const updatedMetrics = calculateAssessmentMetrics({
+        wordStates,
+        secondsElapsed: currentSeconds > 0 ? currentSeconds : 1,
+        comprehensionResponses,
+        studentGrade: Number(student?.grade || 3),
+        observations
+      });
+
+      const wcpmEl = container.querySelector('#stat-wcpm');
+      const accEl = container.querySelector('#stat-acc');
+      const errEl = container.querySelector('#stat-err');
+      const attEl = container.querySelector('#stat-att');
+
+      if (wcpmEl) wcpmEl.textContent = (currentSeconds > 0 && updatedMetrics.wordsAttempted > 0) ? updatedMetrics.wcpm : 0;
+      if (accEl) {
+        accEl.textContent = updatedMetrics.wordsAttempted > 0 ? `${updatedMetrics.accuracyPercentage}%` : '100%';
+        accEl.style.color = (updatedMetrics.wordsAttempted > 0 && updatedMetrics.accuracyPercentage < 85) ? '#e11d48' : 'var(--primary-700)';
+      }
+      if (errEl) errEl.textContent = updatedMetrics.totalErrors;
+      if (attEl) attEl.textContent = `${updatedMetrics.wordsAttempted} / ${currentPassage.wordCount}`;
+    }
+
+    // Attach Word Tap Cycle Handler (Unattempted -> Advance Read | Accurate -> Substituted -> Skipped -> Prompted)
     container.querySelectorAll('.word-chip').forEach((chip) => {
       chip.onclick = () => {
         const idx = parseInt(chip.dataset.index, 10);
         const current = wordStates[idx].state;
-        let next = ERROR_TYPES.ACCURATE;
 
+        // If tapping an unattempted word: child read up to this word
+        if (current === ERROR_TYPES.UNATTEMPTED) {
+          for (let p = 0; p <= idx; p++) {
+            if (wordStates[p].state === ERROR_TYPES.UNATTEMPTED) {
+              wordStates[p].state = ERROR_TYPES.ACCURATE;
+              const prevChip = container.querySelector(`#word-chip-${p}`);
+              if (prevChip) {
+                prevChip.className = `word-chip state-${ERROR_TYPES.ACCURATE}`;
+                prevChip.setAttribute('aria-label', `${wordStates[p].word} (${ERROR_TYPES.ACCURATE})`);
+              }
+            }
+          }
+          if (idx > lastRecognizedWordIndex) {
+            lastRecognizedWordIndex = idx;
+          }
+          playTone('tap');
+          updateLiveMetricsDisplay();
+          return;
+        }
+
+        // Already attempted: cycle error states
+        let next = ERROR_TYPES.ACCURATE;
         if (current === ERROR_TYPES.ACCURATE) {
           next = ERROR_TYPES.SUBSTITUTED;
           playTone('mark_error');
@@ -383,39 +580,190 @@ export async function renderAssessment(container, { initialStudentId = null, onF
         chip.className = `word-chip state-${next}`;
         chip.setAttribute('aria-label', `${wordStates[idx].word} (${next})`);
 
-        // Recalculate live stats
-        const updatedMetrics = calculateAssessmentMetrics({
-          wordStates,
-          secondsElapsed: elapsedSeconds > 0 ? elapsedSeconds : (timerMode === '60s' ? 60 - timerSeconds : 60),
-          comprehensionResponses,
-          studentGrade: Number(student?.grade || 3),
-          observations
-        });
-
-        const wcpmEl = container.querySelector('#stat-wcpm');
-        const accEl = container.querySelector('#stat-acc');
-        const errEl = container.querySelector('#stat-err');
-        const attEl = container.querySelector('#stat-att');
-
-        if (wcpmEl) wcpmEl.textContent = updatedMetrics.wcpm;
-        if (accEl) {
-          accEl.textContent = `${updatedMetrics.accuracyPercentage}%`;
-          accEl.style.color = updatedMetrics.accuracyPercentage >= 85 ? 'var(--primary-700)' : '#e11d48';
-        }
-        if (errEl) errEl.textContent = updatedMetrics.totalErrors;
-        if (attEl) attEl.textContent = `${updatedMetrics.wordsAttempted} / ${currentPassage.wordCount}`;
+        updateLiveMetricsDisplay();
       };
     });
+
+    // Quick Action: Mark All Read
+    const markAllBtn = container.querySelector('#btn-mark-all-read');
+    if (markAllBtn) {
+      markAllBtn.onclick = () => {
+        wordStates.forEach((ws, idx) => {
+          ws.state = ERROR_TYPES.ACCURATE;
+          const chip = container.querySelector(`#word-chip-${idx}`);
+          if (chip) {
+            chip.className = `word-chip state-${ERROR_TYPES.ACCURATE}`;
+            chip.setAttribute('aria-label', `${ws.word} (${ERROR_TYPES.ACCURATE})`);
+          }
+        });
+        lastRecognizedWordIndex = wordStates.length - 1;
+        playTone('correct');
+        updateLiveMetricsDisplay();
+      };
+    }
+
+    // Quick Action: Reset All Words
+    const resetWordsBtn = container.querySelector('#btn-reset-words');
+    if (resetWordsBtn) {
+      resetWordsBtn.onclick = () => {
+        wordStates.forEach((ws, idx) => {
+          ws.state = ERROR_TYPES.UNATTEMPTED;
+          const chip = container.querySelector(`#word-chip-${idx}`);
+          if (chip) {
+            chip.className = 'word-chip state-unattempted';
+            chip.setAttribute('aria-label', `${ws.word} (unattempted)`);
+          }
+        });
+        lastRecognizedWordIndex = -1;
+        playTone('tap');
+        updateLiveMetricsDisplay();
+      };
+    }
 
     // Timer Controls
     const timerNumberEl = container.querySelector('#timer-number');
     const timerToggleBtn = container.querySelector('#btn-timer-toggle');
     const timerResetBtn = container.querySelector('#btn-timer-reset');
+    const voiceToggleBtn = container.querySelector('#btn-toggle-voice-eval');
+    const voiceBanner = container.querySelector('#voice-eval-banner');
 
+    function cleanWord(w) {
+      if (!w) return '';
+      return w.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()'"?–—]/g, '').trim();
+    }
+
+    function handleSpokenChunk(spokenText) {
+      if (!spokenText || !wordStates.length) return;
+      const tokens = spokenText
+        .toLowerCase()
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()'"?–—]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean);
+
+      let searchStart = Math.max(0, lastRecognizedWordIndex + 1);
+
+      tokens.forEach((token) => {
+        for (let i = searchStart; i < Math.min(wordStates.length, searchStart + 5); i++) {
+          const target = cleanWord(wordStates[i].word);
+          if (!target) continue;
+
+          const match = target === token ||
+            (target.length >= 3 && token.length >= 3 && (target.startsWith(token) || token.startsWith(target)));
+
+          if (match) {
+            // Mark any skipped words between searchStart and i as SKIPPED
+            for (let sIdx = searchStart; sIdx < i; sIdx++) {
+              if (wordStates[sIdx].state === ERROR_TYPES.UNATTEMPTED) {
+                wordStates[sIdx].state = ERROR_TYPES.SKIPPED;
+                const skippedChip = container.querySelector(`#word-chip-${sIdx}`);
+                if (skippedChip) {
+                  skippedChip.className = `word-chip state-${ERROR_TYPES.SKIPPED}`;
+                  skippedChip.setAttribute('aria-label', `${wordStates[sIdx].word} (skipped)`);
+                }
+              }
+            }
+
+            wordStates[i].state = ERROR_TYPES.ACCURATE;
+            lastRecognizedWordIndex = i;
+            searchStart = i + 1;
+
+            const chip = container.querySelector(`#word-chip-${i}`);
+            if (chip) {
+              chip.className = `word-chip state-${ERROR_TYPES.ACCURATE}`;
+              chip.setAttribute('aria-label', `${wordStates[i].word} (${ERROR_TYPES.ACCURATE})`);
+              chip.style.transform = 'scale(1.1)';
+              setTimeout(() => { if (chip) chip.style.transform = 'none'; }, 250);
+            }
+            break;
+          }
+        }
+      });
+
+      updateLiveMetricsDisplay();
+    }
+
+    function startVoiceAssessment() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        alert(t('voice_eval_not_supported'));
+        return;
+      }
+      try {
+        speechRecognizer = new SpeechRec();
+        speechRecognizer.continuous = true;
+        speechRecognizer.interimResults = true;
+        speechRecognizer.maxAlternatives = 3;
+        speechRecognizer.lang = assessmentLanguage === 'en' ? 'en-IN' : 'te-IN';
+
+        speechRecognizer.onresult = (event) => {
+          let chunk = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            chunk += event.results[i][0].transcript;
+          }
+          const spoken = chunk.trim();
+          if (spoken) {
+            const heardEl = container.querySelector('#voice-eval-heard-text');
+            if (heardEl) heardEl.textContent = spoken;
+            handleSpokenChunk(spoken);
+          }
+        };
+
+        speechRecognizer.onerror = (e) => {
+          console.warn('[Voice Assessment Error]', e.error);
+          if (e.error === 'not-allowed') {
+            stopVoiceRecognition();
+            if (voiceToggleBtn) {
+              voiceToggleBtn.className = 'btn btn-sm btn-outline';
+              voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_off')}`;
+            }
+            if (voiceBanner) voiceBanner.style.display = 'none';
+          }
+        };
+
+        speechRecognizer.onend = () => {
+          if (isVoiceEvalActive && isTimerRunning) {
+            try { speechRecognizer.start(); } catch (err) { }
+          }
+        };
+
+        speechRecognizer.start();
+        isVoiceEvalActive = true;
+      } catch (err) {
+        console.warn('[Voice Assessment Init Failed]', err);
+      }
+    }
+
+    // Toggle Voice Auto-Evaluation IN-PLACE (No full DOM re-render)
+    if (voiceToggleBtn) {
+      voiceToggleBtn.onclick = () => {
+        if (isVoiceEvalActive) {
+          stopVoiceRecognition();
+          voiceToggleBtn.className = 'btn btn-sm btn-outline';
+          voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_off')}`;
+          if (voiceBanner) voiceBanner.style.display = 'none';
+        } else {
+          startVoiceAssessment();
+          voiceToggleBtn.className = 'btn btn-sm btn-danger';
+          voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_on')}`;
+          if (voiceBanner) voiceBanner.style.display = 'flex';
+          if (!isTimerRunning) {
+            timerToggleBtn.click();
+          }
+        }
+      };
+    }
+
+    // Real-Time Timer Control
     timerToggleBtn.onclick = () => {
       if (isTimerRunning) {
         clearInterval(timerInterval);
         isTimerRunning = false;
+        stopVoiceRecognition();
+        if (voiceToggleBtn) {
+          voiceToggleBtn.className = 'btn btn-sm btn-outline';
+          voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_off')}`;
+        }
+        if (voiceBanner) voiceBanner.style.display = 'none';
         timerToggleBtn.textContent = `▶️ ${t('timer_start')}`;
       } else {
         isTimerRunning = true;
@@ -425,11 +773,20 @@ export async function renderAssessment(container, { initialStudentId = null, onF
             timerSeconds--;
             elapsedSeconds++;
             if (timerNumberEl) timerNumberEl.textContent = timerSeconds;
+            // Recalculate WCPM in real-time on every second tick
+            updateLiveMetricsDisplay();
             if (timerSeconds === 0) {
               clearInterval(timerInterval);
               isTimerRunning = false;
+              stopVoiceRecognition();
+              if (voiceToggleBtn) {
+                voiceToggleBtn.className = 'btn btn-sm btn-outline';
+                voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_off')}`;
+              }
+              if (voiceBanner) voiceBanner.style.display = 'none';
               playTone('complete');
               timerToggleBtn.textContent = t('timer_completed');
+              updateLiveMetricsDisplay();
             }
           }
         }, 1000);
@@ -439,10 +796,26 @@ export async function renderAssessment(container, { initialStudentId = null, onF
     timerResetBtn.onclick = () => {
       clearInterval(timerInterval);
       isTimerRunning = false;
+      stopVoiceRecognition();
+      if (voiceToggleBtn) {
+        voiceToggleBtn.className = 'btn btn-sm btn-outline';
+        voiceToggleBtn.innerHTML = `<span>${icon('mic', { size: 15 })}</span> ${t('voice_eval_toggle_off')}`;
+      }
+      if (voiceBanner) voiceBanner.style.display = 'none';
       timerSeconds = 60;
       elapsedSeconds = 0;
+      lastRecognizedWordIndex = -1;
+      wordStates.forEach((ws, idx) => {
+        ws.state = ERROR_TYPES.UNATTEMPTED;
+        const chip = container.querySelector(`#word-chip-${idx}`);
+        if (chip) {
+          chip.className = 'word-chip state-unattempted';
+          chip.setAttribute('aria-label', `${ws.word} (unattempted)`);
+        }
+      });
       if (timerNumberEl) timerNumberEl.textContent = '60';
       timerToggleBtn.textContent = `▶️ ${t('timer_start')}`;
+      updateLiveMetricsDisplay();
     };
 
     // Observations Checkboxes Handlers
@@ -474,6 +847,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
     container.querySelector('#btn-back-to-step1').onclick = () => {
       clearInterval(timerInterval);
       isTimerRunning = false;
+      stopVoiceRecognition();
       currentStep = 1;
       render();
     };
@@ -481,6 +855,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
     container.querySelector('#btn-go-to-comp').onclick = () => {
       clearInterval(timerInterval);
       isTimerRunning = false;
+      stopVoiceRecognition();
       currentStep = 3;
       render();
     };
@@ -589,11 +964,13 @@ export async function renderAssessment(container, { initialStudentId = null, onF
     const recResult = generateRecommendations({
       metrics,
       observations,
-      passageTitle: lang === 'te' ? currentPassage.title_te : currentPassage.title_en
+      passageTitle: lang === 'te' ? currentPassage.title_te : currentPassage.title_en,
+      language: assessmentLanguage
     });
 
+    const activeLevels = assessmentLanguage === 'en' ? ENGLISH_LEVELS : TELUGU_LEVELS;
     const assignedLevelId = teacherOverrideLevel || metrics.provisionalLevel.levelId;
-    const assignedLevel = TELUGU_LEVELS.find((l) => l.id === assignedLevelId) || TELUGU_LEVELS[0];
+    const assignedLevel = activeLevels.find((l) => l.id === assignedLevelId) || activeLevels[0];
 
     // Persist assessment result immediately to IndexedDB
     const assessmentRecord = {
@@ -602,6 +979,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
       classId: currentClassId,
       passageId: selectedPassageId,
       passageTitle: lang === 'te' ? currentPassage.title_te : currentPassage.title_en,
+      language: assessmentLanguage,
       date: new Date().toISOString(),
       metrics,
       observations,
@@ -697,7 +1075,7 @@ export async function renderAssessment(container, { initialStudentId = null, onF
               ${t('teacher_override_hint')}
             </p>
             <select id="select-teacher-override" class="form-input te-text" style="padding: 6px 12px; font-size: 0.88rem;">
-              ${TELUGU_LEVELS.map((lvl) => `
+              ${activeLevels.map((lvl) => `
                 <option value="${lvl.id}" ${lvl.id === assignedLevelId ? 'selected' : ''}>
                   ${lang === 'te' ? lvl.name_te : lvl.name_en}
                 </option>

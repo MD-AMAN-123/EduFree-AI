@@ -8,6 +8,7 @@ const audioBlobCache = new Map();   // text → blobUrl (for offline replay)
 const ttsUrlCache = new Map();      // text → direct TTS URL (for instant replay)
 let currentActiveAudio = null;
 let _cachedTeluguVoice = null;      // Cached best Web Speech Telugu voice
+let _cachedEnglishVoice = null;     // Cached best Web Speech English voice
 let _voiceSearchDone = false;
 
 function getAudioContext() {
@@ -30,6 +31,7 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.getVoices();
     _voiceSearchDone = false; // re-search when voices change
     _cachedTeluguVoice = null;
+    _cachedEnglishVoice = null;
   };
 }
 
@@ -66,6 +68,45 @@ function getBestTeluguVoice() {
 }
 
 /**
+ * Find the best available English voice for Web Speech API.
+ * Priority: en-IN (Indian English natural/neural) > any en-IN > en-GB/en-US > null
+ */
+function getBestEnglishVoice() {
+  if (_cachedEnglishVoice) return _cachedEnglishVoice;
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  // Indian English Neural/Natural voice
+  _cachedEnglishVoice = voices.find((v) =>
+    (v.lang === 'en-IN' || v.lang === 'en_IN') &&
+    /natural|neural|google|ravi|heera/i.test(v.name)
+  );
+
+  // Any en-IN voice
+  if (!_cachedEnglishVoice) {
+    _cachedEnglishVoice = voices.find((v) => v.lang === 'en-IN' || v.lang === 'en_IN');
+  }
+
+  // Any English voice (en-GB, en-US)
+  if (!_cachedEnglishVoice) {
+    _cachedEnglishVoice = voices.find((v) => v.lang.startsWith('en'));
+  }
+
+  return _cachedEnglishVoice;
+}
+
+/**
+ * Check if English speech voice is available on this browser/OS
+ */
+export function hasEnglishVoice() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
+  const voices = window.speechSynthesis.getVoices();
+  return voices.some((v) => v.lang.startsWith('en'));
+}
+
+/**
  * Check if Telugu speech voice is available on this browser/OS
  */
 export function hasTeluguVoice() {
@@ -99,6 +140,13 @@ export function stopSpeech() {
  */
 function buildTtsUrl(text, speed = 0.8) {
   return `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&ttsspeed=${speed}&q=${encodeURIComponent(text)}`;
+}
+
+/**
+ * Build Google Translate TTS URL for English text (en-IN locale).
+ */
+function buildEnglishTtsUrl(text, speed = 0.85) {
+  return `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-IN&client=tw-ob&ttsspeed=${speed}&q=${encodeURIComponent(text)}`;
 }
 
 /**
@@ -194,6 +242,81 @@ export async function speakTeluguText(text, options = {}) {
 
   // --- Tier 2 & 3: Web Speech API / Formant Synthesizer ---
   fallbackSpeech(cleanText, { rate, pitch, phonetic, onEnd: finish });
+}
+
+/**
+ * Speak text in English with authentic pronunciation (en-IN / en-US)
+ * Tier 1: Google Translate TTS via Audio Element (en-IN)
+ * Tier 2: Web Speech API with best available Indian or general English voice
+ */
+export async function speakEnglishText(text, options = {}) {
+  const { rate = 0.9, pitch = 1.0, onStart = null, onEnd = null } = options;
+
+  if (!text || typeof text !== 'string') {
+    if (onEnd) onEnd();
+    return;
+  }
+
+  stopSpeech();
+
+  if (onStart) {
+    try { onStart(); } catch (e) {}
+  }
+
+  const cleanText = text.trim();
+  let finished = false;
+  const finish = () => {
+    if (!finished) {
+      finished = true;
+      currentActiveAudio = null;
+      if (onEnd) {
+        try { onEnd(); } catch (e) {}
+      }
+    }
+  };
+
+  // Tier 1: Google TTS en-IN
+  try {
+    const ttsUrl = buildEnglishTtsUrl(cleanText, 0.85);
+    const audio = await playAudioElement(ttsUrl, rate);
+    ttsUrlCache.set(cleanText, ttsUrl);
+    audio.onended = finish;
+    audio.onerror = finish;
+    return;
+  } catch (err) {}
+
+  // Tier 2: Web Speech API en-IN / en-US
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      const bestVoice = getBestEnglishVoice();
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang || 'en-IN';
+      } else {
+        utterance.lang = 'en-IN';
+      }
+      utterance.onend = finish;
+      utterance.onerror = finish;
+      window.speechSynthesis.speak(utterance);
+      return;
+    } catch (e) {}
+  }
+
+  finish();
+}
+
+/**
+ * Universal text speaker for Telugu or English
+ */
+export async function speakText(text, lang = 'te', options = {}) {
+  if (lang === 'en') {
+    return speakEnglishText(text, options);
+  }
+  return speakTeluguText(text, options);
 }
 
 /**

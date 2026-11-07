@@ -5,7 +5,8 @@ export const ERROR_TYPES = {
   ACCURATE: 'accurate',       // Child read correctly with appropriate pronunciation
   SKIPPED: 'skipped',         // Word omitted or skipped over
   SUBSTITUTED: 'substituted', // Child read a different word or made phoneme error
-  PROMPTED: 'prompted'        // Teacher provided phoneme or whole-word prompt
+  PROMPTED: 'prompted',       // Teacher provided phoneme or whole-word prompt
+  UNATTEMPTED: 'unattempted'  // Not yet read / pending
 };
 
 export const PROVISIONAL_BENCHMARKS = {

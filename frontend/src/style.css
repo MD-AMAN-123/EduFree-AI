@@ -875,6 +875,12 @@ body {
 }
 
 /* Word Status Marker Styles */
+.word-chip.state-unattempted {
+  background: #ffffff;
+  border: 2px solid var(--border-light);
+  color: var(--text-main);
+}
+
 .word-chip.state-accurate {
   background: var(--mark-accurate-bg);
   border-color: var(--mark-accurate-border);
@@ -5842,5 +5848,15 @@ body.sunlight-mode .chat-action-btn {
   margin-right: 6px;
   vertical-align: -3px;
   color: var(--primary-600);
+}
+
+/* Voice Auto-Evaluation Indicator Pulse */
+@keyframes voicePulse {
+  0% { transform: scale(0.92); opacity: 0.6; }
+  50% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(0.92); opacity: 0.6; }
+}
+.voice-pulsing-dot {
+  animation: voicePulse 1.4s infinite ease-in-out;
 }
 

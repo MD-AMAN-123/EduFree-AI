@@ -4,10 +4,12 @@
 export function generateRecommendations({
   metrics,
   observations = {},
-  passageTitle = ""
+  passageTitle = "",
+  language = "te"
 }) {
   const recommendations = [];
   const rationales = [];
+  const isEn = language === 'en';
 
   const {
     wcpm,
@@ -22,17 +24,21 @@ export function generateRecommendations({
   // 1. Analyze Specific Error Patterns and Construct Transparent Rationales
   if (observations.vowel_sign_confusion || (substitutedCount >= 3 && accuracyPercentage < 75)) {
     rationales.push({
-      reason_te: "విద్యార్థి పఠనంలో గుణింతాల గుర్తులను (మాత్రలను) తికమకపడినట్లు గమనించబడింది.",
-      reason_en: "Student showed confusion between vowel signs (Gunintham matras) during oral reading.",
+      reason_te: isEn
+        ? "విద్యార్థి ఆంగ్ల ఫోనిక్స్ శబ్దాలు మరియు బ్లెండ్స్ (sh, ch, th) పలకడంలో తికమకపడినట్లు గమనించబడింది."
+        : "విద్యార్థి పఠనంలో గుణింతాల గుర్తులను (మాత్రలను) తికమకపడినట్లు గమనించబడింది.",
+      reason_en: isEn
+        ? "Student showed confusion with English phonics digraphs and letter blends (sh, ch, th) during oral reading."
+        : "Student showed confusion between vowel signs (Gunintham matras) during oral reading.",
       category: "guninthalu"
     });
     recommendations.push({
-      id: "rec_gunintham_wheel",
+      id: isEn ? "rec_blends_drill" : "rec_gunintham_wheel",
       levelId: "level_2_guninthalu",
-      title_te: "గుణింతాల చక్రం & శబ్దాల సాధన",
-      title_en: "Gunintham Wheel & Sound Drill",
-      description_te: "తలకట్టు, దీర్ఘం, గుడి, కొమ్ములను స్వయంగా మార్చి పలికే ఇంటరాక్టివ్ అభ్యాసం.",
-      description_en: "Interactive matra substitution to reinforce vowel sign discrimination.",
+      title_te: isEn ? "ఫోనిక్స్ బ్లెండ్స్ & శబ్దాల సాధన (sh, ch, th)" : "గుణింతాల చక్రం & శబ్దాల సాధన",
+      title_en: isEn ? "Phonics Blends & Digraphs Drill (sh, ch, th)" : "Gunintham Wheel & Sound Drill",
+      description_te: isEn ? "ద్వంద్వ శబ్దాలు (sh, ch, th, bl) వేరుచేసి పలికే ఇంటరాక్టివ్ అభ్యాసం." : "తలకట్టు, దీర్ఘం, గుడి, కొమ్ములను స్వయంగా మార్చి పలికే ఇంటరాక్టివ్ అభ్యాసం.",
+      description_en: isEn ? "Interactive digraph and blend substitution to build phonetic awareness." : "Interactive matra substitution to reinforce vowel sign discrimination.",
       practiceMode: "guninthalu",
       targetDurationMinutes: 10
     });
@@ -40,17 +46,21 @@ export function generateRecommendations({
 
   if (observations.vatthu_struggle || (substitutedCount >= 2 && provisionalLevel.levelId === 'level_4_ottulu')) {
     rationales.push({
-      reason_te: "ద్విత్వాక్షరాలు మరియు సంయుక్తాక్షరాలు (ఒత్తులు) ఉన్న పదాలను పలకడంలో సహాయం అవసరమైంది.",
-      reason_en: "Student hesitated or required prompts when reading conjunct consonants (Ottulu).",
+      reason_te: isEn
+        ? "సంక్లిష్ట ఆంగ్ల పదాలు మరియు బ్లెండ్స్ (school, friend, clean) చదవడంలో సహాయం అవసరమైంది."
+        : "ద్విత్వాక్షరాలు మరియు సంయుక్తాక్షరాలు (ఒత్తులు) ఉన్న పదాలను పలకడంలో సహాయం అవసరమైంది.",
+      reason_en: isEn
+        ? "Student hesitated or required prompts when reading complex consonant clusters (school, friend, clean)."
+        : "Student hesitated or required prompts when reading conjunct consonants (Ottulu).",
       category: "ottulu"
     });
     recommendations.push({
-      id: "rec_ottulu_pairs",
+      id: isEn ? "rec_complex_clusters" : "rec_ottulu_pairs",
       levelId: "level_4_ottulu",
-      title_te: "ఒత్తుల జతల కార్డులు (ద్విత్వ/సంయుక్త)",
-      title_en: "Ottulu Flashcard Pairs (Geminate & Clusters)",
-      description_te: "అమ్మ, చెట్టు, పుస్తకం వంటి నిత్యజీవిత పదాలను విడదీసి నేర్చుకునే కార్డులు.",
-      description_en: "Word decomposition cards highlighting subscript consonants.",
+      title_te: isEn ? "సంక్లిష్ట ఆంగ్ల పదాల కార్డులు (Clusters & Blends)" : "ఒత్తుల జతల కార్డులు (ద్విత్వ/సంయుక్త)",
+      title_en: isEn ? "Complex Vocabulary & Cluster Cards" : "Ottulu Flashcard Pairs (Geminate & Clusters)",
+      description_te: isEn ? "School, friend, garden వంటి రోజువారీ పదాలను విడదీసి నేర్చుకునే కార్డులు." : "అమ్మ, చెట్టు, పుస్తకం వంటి నిత్యజీవిత పదాలను విడదీసి నేర్చుకునే కార్డులు.",
+      description_en: isEn ? "Word decomposition cards highlighting multi-syllable clusters and long vowels." : "Word decomposition cards highlighting subscript consonants.",
       practiceMode: "ottulu",
       targetDurationMinutes: 10
     });
@@ -76,17 +86,21 @@ export function generateRecommendations({
 
   if (observations.finger_point || observations.letter_by_letter) {
     rationales.push({
-      reason_te: "పదాలను మొత్తం ఒకేసారి గుర్తించే బదులు అక్షరాల వారీగా విడదీసి చదువుతున్నారు. దృశ్య పదాల (Sight Words) సాధన సూచించబడింది.",
-      reason_en: "Reads letter-by-letter rather than fluent word recognition. Sight word flashcards recommended.",
+      reason_te: isEn
+        ? "పదాలను అక్షరాల వారీగా విడదీసి చదువుతున్నారు. ఆంగ్ల సైట్ వర్డ్స్ (Sight Words: the, and, see) సాధన సూచించబడింది."
+        : "పదాలను మొత్తం ఒకేసారి గుర్తించే బదులు అక్షరాల వారీగా విడదీసి చదువుతున్నారు. దృశ్య పదాల (Sight Words) సాధన సూచించబడింది.",
+      reason_en: isEn
+        ? "Reads letter-by-letter rather than fluent word recognition. English high-frequency sight words flashcards recommended."
+        : "Reads letter-by-letter rather than fluent word recognition. Sight word flashcards recommended.",
       category: "fluency"
     });
     recommendations.push({
-      id: "rec_sight_words",
+      id: isEn ? "rec_en_sight_words" : "rec_sight_words",
       levelId: "level_3_simple_words",
-      title_te: "సరళ పదాల వేగవంతమైన ఫ్లాష్‌కార్డులు",
-      title_en: "Rapid Sight Word Flashcards",
-      description_te: "పలక, కలము, పడవ వంటి సరళ పదాలను క్షణాల్లో గుర్తించే అభ్యాసం.",
-      description_en: "Rapid-fire visual recognition of common high-frequency words.",
+      title_te: isEn ? "సరళ ఆంగ్ల పదాల ఫ్లాష్‌కార్డులు (CVC & Sight Words)" : "సరళ పదాల వేగవంతమైన ఫ్లాష్‌కార్డులు",
+      title_en: isEn ? "Rapid English Sight Words & CVC Flashcards" : "Rapid Sight Word Flashcards",
+      description_te: isEn ? "Cat, dog, sun, the, and వంటి ప్రాథమిక పదాలను క్షణాల్లో గుర్తించే అభ్యాసం." : "పలక, కలము, పడవ వంటి సరళ పదాలను క్షణాల్లో గుర్తించే అభ్యాసం.",
+      description_en: isEn ? "Rapid-fire visual recognition of common high-frequency English CVC and sight words." : "Rapid-fire visual recognition of common high-frequency words.",
       practiceMode: "simple_words",
       targetDurationMinutes: 5
     });
